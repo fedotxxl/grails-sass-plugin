@@ -1,0 +1,8 @@
+@import "sub";
+@import "sub/another";
+
+html {
+  body {
+    color: blue;
+  }
+}
