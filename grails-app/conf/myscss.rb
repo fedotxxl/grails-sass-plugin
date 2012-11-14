@@ -1,6 +1,7 @@
-require 'rubygems'
-require 'sass'
-require 'sass/exec'
+#require 'rubygems'
+#require 'sass'
+#require 'sass/exec'
+require 'sass-3.2.3/lib/sass'
 
 def compileScss(filesIn, filesTo)
   puts filesIn
