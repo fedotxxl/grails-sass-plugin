@@ -36,7 +36,9 @@ grails.project.dependency.resolution = {
             export = false
         }
 
-        compile(":resources:1.1.5")
+        compile(":resources:1.1.5") {
+            export = false //todo
+        }
     }
 }
 
