@@ -16,7 +16,7 @@ class ScssUtils {
 
     static String compile(String template, String path, String syntax, String style, Boolean debugInfo, Boolean lineComments) {
 
-        LOG.error "Compiling template by path ${path}, syntax ${syntax}, style ${style}"
+        LOG.info "Compiling template by path ${path}, syntax ${syntax}, style ${style}"
 
         //:compact, :compressed, :nested,
         //:sass, :scss
