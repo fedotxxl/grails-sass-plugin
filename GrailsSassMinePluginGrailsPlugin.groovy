@@ -10,7 +10,7 @@ import ru.gramant.PluginSettings
 
 class GrailsSassMinePluginGrailsPlugin {
     // the plugin version
-    def version = "0.1.7.10"
+    def version = "0.1.7.11"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // resources that are excluded from plugin packaging
@@ -35,11 +35,15 @@ Brief summary/description of the plugin.
     def documentation = "http://grails.org/plugin/grails-sass-mine-plugin"
 
     def onChange = { event ->
-        PluginSettings.checkFileAndCompileWithDependents(event.source)
+        PluginSettings.checkFileAndCompileWithDependents(event.source.file)
     }
 
     def doWithSpring = {
         println "scss-do-with-spring"
+
+        //todo refactor it
+        //process comments
+        //option clear_target_folder to remove scss_css folder
 
 
         if (PluginSettings.useResourcesPlugin) {

@@ -17,11 +17,15 @@ class PluginSettings {
     }
 
     static File getTargetFile(File sourceFile) {
-        return new File(targetFolder, getCompileRelativePath(sourceFile))
+        return new File(targetFolder, getCompileRelativePath(sourceFile) + ".css")
     }
 
-    static boolean needToCompile(File file) {
-        return FileUtils.directoryContains(sourceFolder, file) && !file.name.startsWith("_")
+    static boolean isTemplate(File file) {
+        return file.name.startsWith("_")
+    }
+
+    static boolean needToProcess(File file) {
+        return FileUtils.directoryContains(sourceFolder, file)
     }
 
     static String getCompileRelativePath(File file) {
@@ -29,16 +33,19 @@ class PluginSettings {
     }
 
     static boolean checkFileAndCompile(File sourceFile) {
-        if (PluginSettings.needToCompile(sourceFile)) {
-            def targetFile = getTargetFile(sourceFile)
-            def scss = sourceFile.text
-            def css = ScssUtils.compile(grailsApplication, scss, sourceFile.parent)
+        if (PluginSettings.needToProcess(sourceFile)) {
+            if (!isTemplate(sourceFile)) {
+                //this is not template... this should be compiled
+                def targetFile = getTargetFile(sourceFile)
+                def scss = sourceFile.text
+                def css = ScssUtils.compile(grailsApplication, scss, sourceFile.parent)
 
-            targetFile.parentFile.mkdirs()
-            if (css) {
-                targetFile.write(css)
-            } else {
-                targetFile.write(scss)
+                targetFile.parentFile.mkdirs()
+                if (css) {
+                    targetFile.write(css)
+                } else {
+                    targetFile.write(scss)
+                }
             }
 
             //refresh dependent scss files

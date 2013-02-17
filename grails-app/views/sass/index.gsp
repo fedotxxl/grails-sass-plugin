@@ -2,7 +2,7 @@
 <html>
 <head>
     <title></title>
-    <r:require module="other"/>
+    <r:require module="app"/>
     <r:layoutResources/>
 </head>
 
