@@ -21,18 +21,13 @@ class ScssResourceMapper {
             if (resource.originalUrl && isSassFile(originalFile)) {
                 println "sass: compiling"
 
-                def c = new HashMap(grailsApplication.config.grails.sass.flatten())
                 def source = originalFile.text
                 def path = grailsApplication.parentContext.getResource(resource.originalUrl)?.file?.parentFile?.absolutePath
 
                 def compiled = ScssUtils.compile(
                         grailsApplication,
                         source,
-                        path,
-                        c.syntax,
-                        c.style,
-                        c.debugInfo as Boolean,
-                        c.lineComments as Boolean)
+                        path)
 
                 def file = new File("${originalFile.absolutePath}.css")
                 file.write(compiled, "UTF-8")

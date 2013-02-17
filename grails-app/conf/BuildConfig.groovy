@@ -29,6 +29,7 @@ grails.project.dependency.resolution = {
         // runtime 'mysql:mysql-connector-java:5.1.18'
         compile "bsf:bsf:2.4.0"
         runtime "org.jruby:jruby-complete:1.6.8"
+        compile "commons-io:commons-io:2.4"
     }
 
     plugins {
@@ -38,6 +39,8 @@ grails.project.dependency.resolution = {
         ) {
             export = false
         }
+
+        test(":spock:0.7")
 
         compile(":resources:1.1.6") {
             export = false //todo
