@@ -23,10 +23,12 @@ class ScssResourceMapper {
 
                 def c = new HashMap(grailsApplication.config.grails.sass.flatten())
                 def source = originalFile.text
+                def path = grailsApplication.parentContext.getResource(resource.originalUrl)?.file?.parentFile?.absolutePath
 
                 def compiled = ScssUtils.compile(
+                        grailsApplication,
                         source,
-                        resource.originalResource.file.parent,
+                        path,
                         c.syntax,
                         c.style,
                         c.debugInfo as Boolean,
@@ -36,10 +38,11 @@ class ScssResourceMapper {
                 file.write(compiled, "UTF-8")
 
                 resource.processedFile = file
-                resource.contentType = 'text/css'
-                resource.sourceUrlExtension = 'css'
-                resource.tagAttributes.rel = 'stylesheet'
+//                resource.contentType = 'text/css'
+//                resource.sourceUrlExtension = 'css'
+//                resource.tagAttributes.rel = 'stylesheet'
                 resource.actualUrl = "${resource.originalUrl}.css"
+                resource.updateActualUrlFromProcessedFile()
             } else {
                 println "sass: skipped"
             }
@@ -59,4 +62,28 @@ class ScssResourceMapper {
         return false
     }
 
+
+    def likeLess(resource) {
+        File lessFile = resource.processedFile
+        File cssFile = new File(lessFile.absolutePath + '.css')
+
+        def importPath = grailsApplication.parentContext.getResource(resource.originalUrl)?.file?.parentFile?.absolutePath
+        if (importPath) {
+            def order = resource.tagAttributes.order ?: 10
+            log.debug "Adding import path [${importPath}][order: ${order}] for resource [${resource}]"
+            paths << [path:importPath, order:order]
+            paths.sort {it.order}
+        }
+
+        try {  sass
+            log.debug "Compiling LESS file [${lessFile}] into [${cssFile}]"
+            lessCompilerService.compile (lessFile, cssFile, paths.collect {it.path})
+            resource.processedFile = cssFile
+            resource.contentType = 'text/css'
+            resource.tagAttributes.rel = 'stylesheet'
+            resource.updateActualUrlFromProcessedFile()
+        } catch (Exception e) {
+            log.error("Error compiling less file: ${lessFile}", e)
+        }
+    }
 }

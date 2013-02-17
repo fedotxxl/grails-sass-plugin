@@ -21,9 +21,13 @@ log4j = {
            'net.sf.ehcache.hibernate'
 
     warn   'org.mortbay.log'
+
+    info   'ru.gramant'
 }
 grails.views.default.codec="none" // none, html, base64
 grails.views.gsp.encoding="UTF-8"
 /*
 grails.sass.comments = false
 grails.sass.style = 'trololo'*/
+
+grails.resources.debug=false

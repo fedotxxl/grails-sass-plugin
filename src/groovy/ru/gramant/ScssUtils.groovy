@@ -4,6 +4,9 @@
  */
 package ru.gramant
 
+import org.codehaus.groovy.grails.commons.GrailsApplication
+import org.springframework.core.io.ClassPathResource
+
 import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
 import org.slf4j.LoggerFactory
@@ -14,7 +17,7 @@ class ScssUtils {
 
     static ScriptEngine jruby = null
 
-    static String compile(String template, String path, String syntax, String style, Boolean debugInfo, Boolean lineComments) {
+    static String compile(GrailsApplication grailsApplication, String template, String path, String syntax, String style, Boolean debugInfo, Boolean lineComments) {
 
         LOG.info "Compiling template by path ${path}, syntax ${syntax}, style ${style}"
 
@@ -24,7 +27,8 @@ class ScssUtils {
         if (!jruby) {
             jruby = new ScriptEngineManager().getEngineByName("jruby");
             //process a ruby file
-            jruby.eval(new BufferedReader(new InputStreamReader(CommonUtils.getClassPathResource("myscss.rb"))));
+            def rubyFile = new ClassPathResource("myscss.rb")
+            jruby.eval(new BufferedReader(new InputStreamReader(rubyFile.inputStream)));
         }
 
         def params = [:]
