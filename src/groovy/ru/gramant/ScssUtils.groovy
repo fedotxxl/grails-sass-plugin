@@ -3,13 +3,12 @@
  * Copyright (c) 2012 Cybervision. All rights reserved.
  */
 package ru.gramant
-
 import org.codehaus.groovy.grails.commons.GrailsApplication
+import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
 
 import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
-import org.slf4j.LoggerFactory
 
 class ScssUtils {
 
@@ -25,10 +24,13 @@ class ScssUtils {
         //:sass, :scss
 
         if (!jruby) {
-            jruby = new ScriptEngineManager().getEngineByName("jruby");
             //process a ruby file
-            def rubyFile = new ClassPathResource("myscss.rb")
-            jruby.eval(new BufferedReader(new InputStreamReader(rubyFile.inputStream)));
+            def rubyFile = new ClassPathResource("myscss.rb").file
+
+            //configure load_path - https://github.com/jruby/jruby/wiki/RedBridge#wiki-Class_Path_Load_Path
+            System.setProperty("org.jruby.embed.class.path", rubyFile.parent);
+            jruby = new ScriptEngineManager().getEngineByName("jruby");
+            jruby.eval(rubyFile.newReader());
         }
 
         def params = [:]
