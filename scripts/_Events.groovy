@@ -6,6 +6,10 @@ eventStatusFinal = { msg ->
     println "scss-status-final-${msg}"
 }
 
-event = { msg ->
-    println "scss-event-${msg}"
+eventCompileEnd = { binding ->
+    println "scss-status-compile-end"
+}
+
+eventCreateWarStart = { name, stagingDir ->
+    println "scss-status-create-war"
 }

@@ -1,12 +1,4 @@
-import org.apache.commons.io.FileUtils
-import org.grails.plugin.resource.BundleResourceMapper
-import org.grails.plugin.resource.CSSBundleResourceMeta
-import org.grails.plugin.resource.CSSPreprocessorResourceMapper
-import org.grails.plugin.resource.CSSRewriterResourceMapper
-import org.grails.plugin.resource.ResourceModule
-import org.grails.plugin.resource.ResourceProcessor
-import org.grails.plugin.resource.ResourceTagLib
-import ru.gramant.PluginSettings
+import ru.gramant.ScssCompiler
 
 class GrailsSassMinePluginGrailsPlugin {
     // the plugin version
@@ -34,42 +26,49 @@ Brief summary/description of the plugin.
     // URL to the plugin's documentation
     def documentation = "http://grails.org/plugin/grails-sass-mine-plugin"
 
+    Boolean firstTime = true
+    Boolean shouldBeCompiled = System.getProperty("scss.compile")
+    ScssCompiler compiler
+
+    def doWithConfigOptions = {
+        'compileOnAnyCommand'(type: Boolean, defaultValue: false)
+        'resourcesMode'(type: Boolean, defaultValue: false)
+        'folder.source'(type: String, defaultValue: '/web-app/scss')
+        'folder.target'(type: String, defaultValue: '/web-app/scss_css')
+        'clearTargetFolder'(type: Boolean, defaultValue: true)
+        'syntax'(type: String, defaultValue: 'byFileDimension')
+        'style'(type: String, defaultValue: "compact")
+        'lineComments'(type: Boolean, defaultValue: false)
+        'debug'(type: Boolean, defaultValue: false)
+    }
+
     def onChange = { event ->
-        PluginSettings.checkFileAndCompileWithDependents(event.source.file)
+        if (!compiler.config.resourcesMode) {
+            compiler.checkFileAndCompileWithDependents(event.source.file)
+        }
     }
 
     def doWithSpring = {
-        println "scss-do-with-spring"
-
-        //todo refactor it
-        //process comments
-        //option clear_target_folder to remove scss_css folder
-
-
-        if (PluginSettings.useResourcesPlugin) {
-            CSSPreprocessorResourceMapper.defaultIncludes.add('**/*.scss')
-            CSSRewriterResourceMapper.defaultIncludes.add('**/*.scss')
-
-//        BundleResourceMapper.MIMETYPE_TO_RESOURCE_META_CLASS.put('stylesheet', CSSBundleResourceMeta)
-//        List currentTypes = new ResourceModule().bundleTypes
-//        ResourceModule.metaClass.getBundleTypes = {  currentTypes << 'scss' }
-            ResourceProcessor.DEFAULT_MODULE_SETTINGS['scss'] = [disposition: 'head'  ]
-            ResourceTagLib.SUPPORTED_TYPES['scss'] = [
-                    type: "text/css",
-                    rel: 'stylesheet',
-                    media: 'screen, projection'
-            ]
-        } else {
-            PluginSettings.grailsApplication = application
-            plugin.watchedResources.each { resource ->
-                PluginSettings.checkFileAndCompile(resource.file)
-            }
-        }
-
     }
 
     def doWithApplicationContext = {
-        println "scss-application-context"
     }
 
+    def doWithWebDescriptor = {
+        if (firstTime) {
+            compiler = new ScssCompiler(application)
+
+            if (!compiler.config.resourcesMode) {
+                //resources mode is disabled... may be we should compile scss
+                if (compiler.config.compileOnAnyCommand || shouldBeCompiled) {
+                    //may be we should clear target folder?
+                    if (compiler.config.clearTargetFolder) compiler.clearTargetFolder()
+                    //let's compile scss files...
+                    compiler.compileScssFiles(plugin.watchedResources.collect { it.file })
+                }
+            }
+        }
+
+        firstTime = false
+    }
 }

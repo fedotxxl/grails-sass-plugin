@@ -41,6 +41,7 @@ grails.project.dependency.resolution = {
         }
 
         test(":spock:0.7")
+        compile ":platform-core:1.0.RC5"
 
         compile(":resources:1.1.6") {
             export = false //todo

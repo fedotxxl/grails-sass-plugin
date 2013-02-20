@@ -31,3 +31,6 @@ grails.sass.comments = false
 grails.sass.style = 'trololo'*/
 
 grails.resources.debug=false
+
+plugin.grailsSassMinePlugin.compileOnAnyCommand = true
+

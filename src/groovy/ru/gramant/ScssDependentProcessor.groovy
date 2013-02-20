@@ -8,7 +8,7 @@ import org.apache.commons.io.FilenameUtils
 
 class ScssDependentProcessor {
 
-    static dependOnFiles = [:].withDefault { key -> []}
+    private dependOnFiles = [:].withDefault { key -> []}
 
     void refreshScssFile(File file) {
         if (file.exists()) {
