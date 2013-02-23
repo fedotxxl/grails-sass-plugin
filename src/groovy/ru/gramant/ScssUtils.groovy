@@ -85,13 +85,60 @@ class ScssUtils {
 
     static Set<String> getDependOnScssNames(String scss) {
         def answer = [] as Set
-        scss.findAll(~(/@import (?: *)"([a-zA-Z0-9\/\\ _]+)"(?: *);/), { m, String scssPath ->
-            def from = -1
-            from = Math.max(from, scssPath.lastIndexOf("\\"))
-            from = Math.max(from, scssPath.lastIndexOf("/"))
-
-            answer << scssPath.substring(from+1)
+        def scssWithoutComments = removeCommentsFromScss(scss)
+        scssWithoutComments.findAll(~(/(?m)(?:^|;| )@import([^;\r]*)/), { m, String scssPath ->
+            if (scssPath) {
+                def paths = extractFileNames(scssPath)
+                paths.each { path ->
+                    def e = FilenameUtils.getExtension(path)
+                    if (path && (!e || (e == 'scss' || e == 'sass')) && !path.startsWith("http://")) {
+                        answer << FilenameUtils.getBaseName(path)
+                    }
+                }
+            }
         })
+
+        return answer
+    }
+
+    static removeCommentsFromScss(String scss) {
+        //http://stackoverflow.com/questions/2613432/remove-source-file-comments-using-intellij
+        return scss.replaceAll(/(\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/|[ \t]*\/\/.*)/, "")
+    }
+
+    private static extractFileNames(String atImport) {
+        def answer = []
+        def current = new StringBuilder()
+        def open = null
+        def checkComma = false
+
+        for (def ch in atImport) {
+            if (!open) {
+                if (ch == '"' || ch == "'") {
+                    if (checkComma) {
+                        return []
+                    } else {
+                        open = ch
+                    }
+                } else if (ch == ',') {
+                    if (checkComma) {
+                        checkComma = false
+                        current = new StringBuilder()
+                    } else {
+                        return []
+                    }
+                } else if (ch != ' ' && ch != '\t') {
+                    return []
+                }
+            } else if (ch == open) {
+                answer << current.toString().trim()
+                current = new StringBuilder()
+                open = null
+                checkComma = true
+            } else {
+                current.append(ch)
+            }
+        }
 
         return answer
     }

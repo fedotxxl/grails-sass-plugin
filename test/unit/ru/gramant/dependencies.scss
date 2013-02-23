@@ -1,0 +1,18 @@
+@import "super_simple";
+@import "a/b";
+@import "a/hello world";
+@import "hello world";
+
+.body {
+  color: #000000;
+}
+
+@import "e\f";
+@import "first", 'second';
+@import incorrect_value;
+@import "another " incorrect "value";
+@import 'one more' incorrect;
+@import "incorrect quotation marks';
+@import "with.scss.scss", "with.sass.sass";
+@import "and.css";
+@import "http://check.com";

@@ -1,10 +1,11 @@
-@import "sub";
-@import "sub/another";
-@import "sub/b";
+/*@import 'sub';
+
 @import "sub/a";
+//@import "sub/another"; */
+@import /*asd*/'sub\b.scss';
 
 html {
   body {
-    color: yellow;
+    color: blue;
   }
 }
