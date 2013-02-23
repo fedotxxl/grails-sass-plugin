@@ -1,8 +1,10 @@
-import ru.gramant.ScssCompiler
+import ru.gramant.ScssDiskCompiler
+import ru.gramant.ScssCompilerPluginUtils
+import ru.gramant.ScssResourcesCompiler
 
 class GrailsSassMinePluginGrailsPlugin {
     // the plugin version
-    def version = "0.1.7.11"
+    def version = "0.1.7.13"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // resources that are excluded from plugin packaging
@@ -28,23 +30,29 @@ Brief summary/description of the plugin.
 
     Boolean firstTime = true
     Boolean shouldBeCompiled = System.getProperty("scss.compile")
-    ScssCompiler compiler
+    ScssDiskCompiler compiler
+    ScssResourcesCompiler resourcesCompiler
+    def config
 
     def doWithConfigOptions = {
-        'compileOnAnyCommand'(type: Boolean, defaultValue: false)
         'resourcesMode'(type: Boolean, defaultValue: false)
-        'folder.source'(type: String, defaultValue: '/web-app/scss')
-        'folder.target'(type: String, defaultValue: '/web-app/scss_css')
-        'clearTargetFolder'(type: Boolean, defaultValue: true)
+        'disk.compileOnAnyCommand'(type: Boolean, defaultValue: true)
+        'disk.folder.source'(type: String, defaultValue: '/web-app/scss')
+        'disk.folder.target'(type: String, defaultValue: '/web-app/scss_css')
+        'disk.clearTargetFolder'(type: Boolean, defaultValue: true)
+        'resources.exceptionOnFailedCompilation'(type: Boolean, defaultValue: false)
         'syntax'(type: String, defaultValue: 'byFileDimension')
         'style'(type: String, defaultValue: "compact")
         'lineComments'(type: Boolean, defaultValue: false)
-        'debug'(type: Boolean, defaultValue: false)
+        'debugInfo'(type: Boolean, defaultValue: false)
     }
 
     def onChange = { event ->
-        if (!compiler.config.resourcesMode) {
-            compiler.checkFileAndCompileWithDependents(event.source.file)
+        File file = event.source.file
+        if (config.resourcesMode) {
+            resourcesCompiler.checkFileAndCompileDependents(file)
+        } else {
+            compiler.checkFileAndCompileWithDependents(file)
         }
     }
 
@@ -56,15 +64,27 @@ Brief summary/description of the plugin.
 
     def doWithWebDescriptor = {
         if (firstTime) {
-            compiler = new ScssCompiler(application)
+            config = ScssCompilerPluginUtils.getPluginsConfig(application.config)
 
-            if (!compiler.config.resourcesMode) {
+            def files = plugin.watchedResources.collect { it.file }
+            if (config.resourcesMode) {
+                println "SCSS: compiler in resource mode"
+
+                resourcesCompiler = new ScssResourcesCompiler()
+                //refreshing dependencies map
+                resourcesCompiler.calculateDependentFiles(files)
+                //enable resources trigger
+                resourcesCompiler.setupResourcesCompileSettings()
+            } else {
+                println "SCSS: compile in static mode"
+
+                compiler = new ScssDiskCompiler(application, config)
                 //resources mode is disabled... may be we should compile scss
-                if (compiler.config.compileOnAnyCommand || shouldBeCompiled) {
+                if (config.disk.compileOnAnyCommand || shouldBeCompiled) {
                     //may be we should clear target folder?
-                    if (compiler.config.clearTargetFolder) compiler.clearTargetFolder()
+                    if (config.disk.clearTargetFolder) compiler.clearTargetFolder()
                     //let's compile scss files...
-                    compiler.compileScssFiles(plugin.watchedResources.collect { it.file })
+                    compiler.compileScssFiles(files)
                 }
             }
         }

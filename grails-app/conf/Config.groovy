@@ -22,7 +22,7 @@ log4j = {
 
     warn   'org.mortbay.log'
 
-    info   'ru.gramant'
+    debug   'ru.gramant'
 }
 grails.views.default.codec="none" // none, html, base64
 grails.views.gsp.encoding="UTF-8"
@@ -32,5 +32,5 @@ grails.sass.style = 'trololo'*/
 
 grails.resources.debug=false
 
-plugin.grailsSassMinePlugin.compileOnAnyCommand = true
+plugin.grailsSassMinePlugin.disk.compileOnAnyCommand = true
 

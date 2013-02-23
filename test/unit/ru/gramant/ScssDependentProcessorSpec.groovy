@@ -28,8 +28,7 @@ class ScssDependentProcessorSpec extends spock.lang.Specification  {
 
     def "test getDependOnScssNames"() {
         expect:
-        def processor = new ScssDependentProcessor()
-        assert processor.getDependOnScssNames(new ClassPathResource(filePath).file.text) == (expectedDenedencies as Set)
+        assert ScssUtils.getDependOnScssNames(new ClassPathResource(filePath).file.text) == (expectedDenedencies as Set)
 
         where:
         filePath | expectedDenedencies

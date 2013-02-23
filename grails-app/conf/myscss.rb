@@ -22,8 +22,6 @@ end
 
 def compileSingleScss(template, params, loads_path)
 
-  puts loads_path
-
   convertedParams = Hash.new
 =begin
 
@@ -38,11 +36,6 @@ def compileSingleScss(template, params, loads_path)
   convertedParams[:line_comments] = params['line_comments']
   convertedParams[:style] = params['style'].to_sym
   convertedParams[:syntax] = params['syntax'].to_sym
-
-  puts "JRUBY: Compiling template"
-  puts template
-  puts "JRUBY: with params"
-  puts convertedParams
 
   sass = Sass::Engine.new(template, convertedParams)
   sass.render

@@ -1,84 +1,69 @@
+import groovy.util.logging.Slf4j
+import org.grails.plugin.resource.ResourceMeta
 import org.grails.plugin.resource.mapper.MapperPhase
 import grails.util.GrailsUtil
+import ru.gramant.ScssCompilerPluginUtils
 import ru.gramant.ScssUtils
 import org.slf4j.LoggerFactory
 
+@Slf4j
 class ScssResourceMapper {
-
-    private static final LOG = LoggerFactory.getLogger(this)
 
     def grailsApplication
     def phase = MapperPhase.GENERATION
 
     static defaultIncludes = ['**/*.scss', '**/*.sass']
-    private static SASS_FILE_EXTENSIONS = ['.scss', '.sass']
+    private static SCSS_FILE_EXTENSIONS = ['.scss', '.sass']
 
-    def map(resource, config) {
-        try {
-            println "processing file ${resource.processedFile}"
-            File originalFile = resource.processedFile
+    def map(ResourceMeta resource, c) {
+        ConfigObject config = ScssCompilerPluginUtils.getPluginsConfig(grailsApplication.config)
+        if (config.resourcesMode) {
+            try {
+                File scssFile = resource.processedFile
+                if (resource.originalUrl && isScssFile(scssFile)) {
+                    def cssFile = new File("${scssFile.absolutePath}.css")
 
-            if (resource.originalUrl && isSassFile(originalFile)) {
-                println "sass: compiling"
+                    log.debug "SCSS: Compiling SCSS file [${scssFile}] into [${cssFile}]"
 
-                def source = originalFile.text
-                def path = grailsApplication.parentContext.getResource(resource.originalUrl)?.file?.parentFile?.absolutePath
+                    def path = grailsApplication.parentContext.getResource(resource.originalUrl)?.file?.parentFile?.absolutePath
+                    def compiled = ScssUtils.compile(scssFile, path, config)
+                    if (compiled != null) {
+                        cssFile.write(compiled, "UTF-8")
 
-                def compiled = ScssUtils.compile(
-                        grailsApplication,
-                        source,
-                        path)
-
-                def file = new File("${originalFile.absolutePath}.css")
-                file.write(compiled, "UTF-8")
-
-                resource.processedFile = file
-//                resource.contentType = 'text/css'
-//                resource.sourceUrlExtension = 'css'
-//                resource.tagAttributes.rel = 'stylesheet'
-                resource.actualUrl = "${resource.originalUrl}.css"
-                resource.updateActualUrlFromProcessedFile()
-            } else {
-                println "sass: skipped"
+                        resource.processedFile = cssFile
+                        resource.contentType = 'text/css'
+    //                  resource.sourceUrlExtension = 'css'
+    //                  resource.tagAttributes.rel = 'stylesheet'
+                        resource.actualUrl = "${resource.originalUrl}.css"
+                    } else {
+                        processCompilationFailure(resource, config)
+                    }
+                } else {
+                    log.debug("SCSS: skipped file [${scssFile}]")
+                }
+            } catch (e) {
+                processCompilationFailure(resource, config)
+                log.error("SCSS: Exception while parsing file [${resource.processedFile}]", e)
             }
-        } catch (e) {
-            LOG.error("Exception while parsing file ${resource.processedFile}", e)
-            e.printStackTrace()
         }
     }
 
-    private boolean isSassFile(File file) {
-        for (def extension in SASS_FILE_EXTENSIONS) {
+    private processCompilationFailure(ResourceMeta resource, ConfigObject config) {
+        if (config.resources.exceptionOnFailedCompilation) {
+            resource.processedFile = new File('non_existing_file.css')
+            resource.updateExists()
+        } else {
+            resource.actualUrl = "${resource.originalUrl}.FAILED.scss"
+        }
+    }
+
+    private boolean isScssFile(File file) {
+        for (def extension in SCSS_FILE_EXTENSIONS) {
             if (file.name.toLowerCase().endsWith(extension)) {
                 return true
             }
         }
 
         return false
-    }
-
-
-    def likeLess(resource) {
-        File lessFile = resource.processedFile
-        File cssFile = new File(lessFile.absolutePath + '.css')
-
-        def importPath = grailsApplication.parentContext.getResource(resource.originalUrl)?.file?.parentFile?.absolutePath
-        if (importPath) {
-            def order = resource.tagAttributes.order ?: 10
-            log.debug "Adding import path [${importPath}][order: ${order}] for resource [${resource}]"
-            paths << [path:importPath, order:order]
-            paths.sort {it.order}
-        }
-
-        try {  sass
-            log.debug "Compiling LESS file [${lessFile}] into [${cssFile}]"
-            lessCompilerService.compile (lessFile, cssFile, paths.collect {it.path})
-            resource.processedFile = cssFile
-            resource.contentType = 'text/css'
-            resource.tagAttributes.rel = 'stylesheet'
-            resource.updateActualUrlFromProcessedFile()
-        } catch (Exception e) {
-            log.error("Error compiling less file: ${lessFile}", e)
-        }
     }
 }

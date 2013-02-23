@@ -1,9 +1,10 @@
 @import "sub";
 @import "sub/another";
+@import "sub/b";
 @import "sub/a";
 
 html {
   body {
-    color: blue;
+    color: yellow;
   }
 }
