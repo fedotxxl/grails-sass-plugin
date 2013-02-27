@@ -26,7 +26,7 @@ class ScssUtils {
             if (!jruby) {
                 //process a ruby file
                 def rubyFileName = compass ? "compassCompiler.rb" : "scssCompiler.rb"
-                def rubyFile = new ClassPathResource(rubyFileName).file
+                def rubyFile = new ClassPathResource("ruby/" + rubyFileName).file
 
                 //configure load_path - https://github.com/jruby/jruby/wiki/RedBridge#wiki-Class_Path_Load_Path
                 System.setProperty("org.jruby.embed.class.path", rubyFile.parent);
