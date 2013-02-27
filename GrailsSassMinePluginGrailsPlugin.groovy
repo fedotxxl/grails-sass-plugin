@@ -5,7 +5,7 @@ import ru.gramant.ScssResourcesCompiler
 
 class GrailsSassMinePluginGrailsPlugin {
     // the plugin version
-    def version = "0.1.7.19"
+    def version = "0.1.7.20"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // resources that are excluded from plugin packaging
@@ -30,8 +30,9 @@ Brief summary/description of the plugin.
     def documentation = "http://grails.org/plugin/grails-sass-mine-plugin"
 
     Boolean firstTime = true
+    Boolean resourcesMode = false
     Boolean shouldBeCompiled = System.getProperty("scss.compile")
-    ScssDiskCompiler compiler
+    ScssDiskCompiler diskCompiler
     ScssResourcesCompiler resourcesCompiler
     ConfigObject config
 
@@ -61,13 +62,21 @@ Brief summary/description of the plugin.
                     if (config.resourcesMode) {
                         resourcesCompiler.checkFileAndCompileDependents(file)
                     } else {
-                        compiler.checkFileAndCompileWithDependents(file)
+                        diskCompiler.checkFileAndCompileWithDependents(file)
                     }
                 }
             }
         } catch (Throwable e) {
             println "SCSS: exception on processing change event: ${event}"
             e.printStackTrace()
+        }
+    }
+
+    def onConfigChange = { event ->
+        if (resourcesMode) {
+            resourcesCompiler?.refreshConfig()
+        } else {
+            diskCompiler?.refreshConfig()
         }
     }
 
@@ -81,9 +90,10 @@ Brief summary/description of the plugin.
         try {
             if (firstTime) {
                 config = ScssCompilerPluginUtils.getPluginsConfig(application.config)
+                resourcesMode = config.resourcesMode
 
                 def files = plugin.watchedResources.collect { it.file }
-                if (config.resourcesMode) {
+                if (resourcesMode) {
                     println "SCSS: compiler in resource mode"
 
                     resourcesCompiler = new ScssResourcesCompiler(config)
@@ -94,13 +104,13 @@ Brief summary/description of the plugin.
                 } else {
                     println "SCSS: compile in static mode"
 
-                    compiler = new ScssDiskCompiler(application, config)
+                    diskCompiler = new ScssDiskCompiler(application, config)
                     //resources mode is disabled... may be we should compile scss
                     if (config.disk.compileOnAnyCommand || shouldBeCompiled) {
                         //may be we should clear target folder?
-                        if (config.disk.clearTargetFolder) compiler.clearTargetFolder()
+                        if (config.disk.clearTargetFolder) diskCompiler.clearTargetFolder()
                         //let's compile scss files...
-                        compiler.compileScssFiles(files)
+                        diskCompiler.compileScssFiles(files)
                     }
                 }
             }
