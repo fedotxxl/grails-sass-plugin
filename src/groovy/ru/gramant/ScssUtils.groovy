@@ -20,9 +20,6 @@ class ScssUtils {
         try {
             log.info "SCSS: Compiling scss file [${scssFile}], syntax ${syntax}, style ${style}"
 
-            //:compact, :compressed, :nested,
-            //:sass, :scss
-
             if (!jruby) {
                 //process a ruby file
                 def rubyFileName = compass ? "compassCompiler.rb" : "scssCompiler.rb"

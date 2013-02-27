@@ -1,5 +1,6 @@
-import ru.gramant.ScssDiskCompiler
+import org.springframework.core.io.FileSystemResource
 import ru.gramant.ScssCompilerPluginUtils
+import ru.gramant.ScssDiskCompiler
 import ru.gramant.ScssResourcesCompiler
 
 class GrailsSassMinePluginGrailsPlugin {
@@ -51,11 +52,22 @@ Brief summary/description of the plugin.
     }
 
     def onChange = { event ->
-        File file = event.source.file
-        if (config.resourcesMode) {
-            resourcesCompiler.checkFileAndCompileDependents(file)
-        } else {
-            compiler.checkFileAndCompileWithDependents(file)
+        try {
+            if(event.source instanceof FileSystemResource) {
+                File file = event.source.file
+
+                //similar to https://github.com/bobbywarner/grails-ruby/blob/master/RubyGrailsPlugin.groovy
+                if (ScssCompilerPluginUtils.isScssFile(file)) {
+                    if (config.resourcesMode) {
+                        resourcesCompiler.checkFileAndCompileDependents(file)
+                    } else {
+                        compiler.checkFileAndCompileWithDependents(file)
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            println "SCSS: exception on processing change event: ${event}"
+            e.printStackTrace()
         }
     }
 
@@ -66,32 +78,37 @@ Brief summary/description of the plugin.
     }
 
     def doWithWebDescriptor = {
-        if (firstTime) {
-            config = ScssCompilerPluginUtils.getPluginsConfig(application.config)
+        try {
+            if (firstTime) {
+                config = ScssCompilerPluginUtils.getPluginsConfig(application.config)
 
-            def files = plugin.watchedResources.collect { it.file }
-            if (config.resourcesMode) {
-                println "SCSS: compiler in resource mode"
+                def files = plugin.watchedResources.collect { it.file }
+                if (config.resourcesMode) {
+                    println "SCSS: compiler in resource mode"
 
-                resourcesCompiler = new ScssResourcesCompiler(config)
-                //refreshing dependencies map
-                resourcesCompiler.calculateDependentFiles(files)
-                //enable resources trigger
-                resourcesCompiler.setupResourcesCompileSettings()
-            } else {
-                println "SCSS: compile in static mode"
+                    resourcesCompiler = new ScssResourcesCompiler(config)
+                    //refreshing dependencies map
+                    resourcesCompiler.calculateDependentFiles(files)
+                    //enable resources trigger
+                    resourcesCompiler.setupResourcesCompileSettings()
+                } else {
+                    println "SCSS: compile in static mode"
 
-                compiler = new ScssDiskCompiler(application, config)
-                //resources mode is disabled... may be we should compile scss
-                if (config.disk.compileOnAnyCommand || shouldBeCompiled) {
-                    //may be we should clear target folder?
-                    if (config.disk.clearTargetFolder) compiler.clearTargetFolder()
-                    //let's compile scss files...
-                    compiler.compileScssFiles(files)
+                    compiler = new ScssDiskCompiler(application, config)
+                    //resources mode is disabled... may be we should compile scss
+                    if (config.disk.compileOnAnyCommand || shouldBeCompiled) {
+                        //may be we should clear target folder?
+                        if (config.disk.clearTargetFolder) compiler.clearTargetFolder()
+                        //let's compile scss files...
+                        compiler.compileScssFiles(files)
+                    }
                 }
             }
-        }
 
-        firstTime = false
+            firstTime = false
+        } catch (Throwable e) {
+            println "SCSS: exception on plugin startup"
+            e.printStackTrace()
+        }
     }
 }

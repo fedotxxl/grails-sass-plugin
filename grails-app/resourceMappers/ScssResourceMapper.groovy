@@ -13,14 +13,13 @@ class ScssResourceMapper {
     def phase = MapperPhase.GENERATION
 
     static defaultIncludes = ['**/*.scss', '**/*.sass']
-    private static SCSS_FILE_EXTENSIONS = ['.scss', '.sass']
 
     def map(ResourceMeta resource, c) {
         ConfigObject config = ScssCompilerPluginUtils.getPluginsConfig(grailsApplication.config)
         if (config.resourcesMode) {
             try {
                 File scssFile = resource.processedFile
-                if (resource.originalUrl && isScssFile(scssFile)) {
+                if (resource.originalUrl && ScssCompilerPluginUtils.isScssFile(scssFile)) {
                     def cssFile = new File("${scssFile.absolutePath}.css")
 
                     log.debug "SCSS: Compiling SCSS file [${scssFile}] into [${cssFile}]"
@@ -77,13 +76,5 @@ class ScssResourceMapper {
         }
     }
 
-    private boolean isScssFile(File file) {
-        for (def extension in SCSS_FILE_EXTENSIONS) {
-            if (file.name.toLowerCase().endsWith(extension)) {
-                return true
-            }
-        }
 
-        return false
-    }
 }
