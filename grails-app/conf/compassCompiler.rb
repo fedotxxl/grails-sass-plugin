@@ -1,9 +1,6 @@
-#require 'rubygems'
-#require 'sass'
-#require 'sass/exec'
-require 'sass-3.2.3/lib/sass'
-require 'gems/chunky_png-1.2.6/lib/chunky_png'
-require 'compass-0.12.2/lib/compass'
+require 'ruby/gems/sass-3.2.3/lib/sass'
+require 'ruby/gems/chunky_png-1.2.6/lib/chunky_png'
+require 'ruby/gems/compass-0.12.2/lib/compass'
 
 def compileSingleScss(template, params, loads_paths)
 
@@ -15,12 +12,6 @@ def compileSingleScss(template, params, loads_paths)
   )
 
   convertedParams = Hash.new
-=begin
-
-  params.each do |key, value|
-    convertedParams[key.to_sym] = value.to_sym
-  end
-=end
 
   loads_paths.add(File.join(Compass.base_directory, 'frameworks/compass/stylesheets'))
   loads_paths.add(File.join(Compass.base_directory, 'frameworks/blueprint/stylesheets'))

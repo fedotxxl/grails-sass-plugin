@@ -1,17 +1,8 @@
-#require 'rubygems'
-#require 'sass'
-#require 'sass/exec'
-require 'sass-3.2.3/lib/sass'
+require 'ruby/gems/sass-3.2.3/lib/sass'
 
 def compileSingleScss(template, params, loads_paths)
 
   convertedParams = Hash.new
-=begin
-
-  params.each do |key, value|
-    convertedParams[key.to_sym] = value.to_sym
-  end
-=end
 
   convertedParams[:cache] = false
   convertedParams[:load_paths] = loads_paths
