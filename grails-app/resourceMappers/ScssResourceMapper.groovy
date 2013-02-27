@@ -2,7 +2,6 @@ import groovy.util.logging.Slf4j
 import org.codehaus.groovy.grails.plugins.GrailsPlugin
 import org.grails.plugin.resource.ResourceMeta
 import org.grails.plugin.resource.mapper.MapperPhase
-import ru.gramant.CommonUtils
 import ru.gramant.ScssCompilerPluginUtils
 import ru.gramant.ScssUtils
 

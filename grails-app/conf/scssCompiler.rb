@@ -3,23 +3,6 @@
 #require 'sass/exec'
 require 'sass-3.2.3/lib/sass'
 
-def compileScss(filesIn, filesTo)
-  puts filesIn
-  puts filesTo
-
-  files = Dir.glob(filesIn)
-  Dir.mkdir(filesTo) unless File.exists?(filesTo)
-
-  puts files
-
-  files.each do
-  | file |
-    puts "     [sass compiler] " + file + " -> " + filesTo + "/" + File.basename(file, ".*") + ".css"
-    opts = Sass::Exec::Sass.new(["--load-path", File.dirname(file), file, File.join(filesTo, File.basename(file, ".*") + ".css")])
-    opts.parse
-  end
-end
-
 def compileSingleScss(template, params, loads_paths)
 
   convertedParams = Hash.new

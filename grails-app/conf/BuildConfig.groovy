@@ -14,19 +14,9 @@ grails.project.dependency.resolution = {
     log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
     repositories {
         grailsCentral()
-        // uncomment the below to enable remote dependency resolution
-        // from public Maven repositories
-        mavenLocal()
         mavenCentral()
-        //mavenRepo "http://snapshots.repository.codehaus.org"
-        //mavenRepo "http://repository.codehaus.org"
-        //mavenRepo "http://download.java.net/maven/2/"
-        //mavenRepo "http://repository.jboss.com/maven2/"
     }
     dependencies {
-        // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
-
-        // runtime 'mysql:mysql-connector-java:5.1.18'
         compile "bsf:bsf:2.4.0"
         runtime "org.jruby:jruby-complete:1.6.8"
         compile "commons-io:commons-io:2.4"
@@ -40,7 +30,10 @@ grails.project.dependency.resolution = {
             export = false
         }
 
-        test(":spock:0.7")
+        test(":spock:0.7") {
+            export = false
+        }
+
         compile ":platform-core:1.0.RC5"
 
         compile(":resources:1.1.6") {

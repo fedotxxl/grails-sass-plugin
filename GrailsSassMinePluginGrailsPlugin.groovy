@@ -23,7 +23,7 @@ Brief summary/description of the plugin.
 '''
 
     //watch for all scss file changes
-    def watchedResources = "file:./web-app/**/*.scss"
+    def watchedResources = ["file:./web-app/**/*.scss", "file:./web-app/**/*.sass"]
 
     // URL to the plugin's documentation
     def documentation = "http://grails.org/plugin/grails-sass-mine-plugin"
@@ -32,7 +32,7 @@ Brief summary/description of the plugin.
     Boolean shouldBeCompiled = System.getProperty("scss.compile")
     ScssDiskCompiler compiler
     ScssResourcesCompiler resourcesCompiler
-    def config
+    ConfigObject config
 
     def doWithConfigOptions = {
         'resourcesMode'(type: Boolean, defaultValue: true)
