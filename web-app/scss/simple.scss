@@ -1,11 +1,15 @@
-/*@import 'sub';
-
+//@import "sub";
+//@import "sub/b";
 @import "sub/a";
-//@import "sub/another"; */
-@import /*asd*/'sub\b.scss';
+//@import "sub/another";
+@import "compass/reset";
+
+//html {
+//  body {
+//    color: yellow;
+//  }
+//}
 
 html {
-  body {
-    color: blue;
-  }
+  //height: image-height('../images/1.jpeg');
 }

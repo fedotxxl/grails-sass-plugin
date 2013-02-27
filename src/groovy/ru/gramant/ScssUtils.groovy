@@ -16,7 +16,7 @@ class ScssUtils {
 
     static ScriptEngine jruby = null
 
-    static String compile(File scssFile, String path, String syntax, String style, Boolean debugInfo, Boolean lineComments) {
+    static String compile(File scssFile, List loadsPath, Boolean compass, String syntax, String style, Boolean debugInfo, Boolean lineComments) {
         try {
             log.info "SCSS: Compiling scss file [${scssFile}], syntax ${syntax}, style ${style}"
 
@@ -25,7 +25,8 @@ class ScssUtils {
 
             if (!jruby) {
                 //process a ruby file
-                def rubyFile = new ClassPathResource("myscss.rb").file
+                def rubyFileName = compass ? "compassCompiler.rb" : "myscss.rb"
+                def rubyFile = new ClassPathResource(rubyFileName).file
 
                 //configure load_path - https://github.com/jruby/jruby/wiki/RedBridge#wiki-Class_Path_Load_Path
                 System.setProperty("org.jruby.embed.class.path", rubyFile.parent);
@@ -38,30 +39,33 @@ class ScssUtils {
             params.style = (style in ['compact', 'compressed', 'nested']) ? syntax : 'compact'
             params.debug_info = (debugInfo) ? true : false
             params.line_comments = (lineComments) ? true : false
+            params.scss_folder = scssFile.parent
 
             //call a method defined in the ruby source
             jruby.put("template", scssFile.text);
             jruby.put("params", params);
-            jruby.put("loads_path", path)
+            jruby.put("loads_paths", [scssFile.parent] + loadsPath)
 
-            return (String) jruby.eval("compileSingleScss(\$template, \$params, \$loads_path)");
+            return (String) jruby.eval("compileSingleScss(\$template, \$params, \$loads_paths)");
         } catch (RaiseException re) {
-            log.error("SCSS: Exception on compiling scss template by path [${path}]")
+            log.error("SCSS: Exception on compiling scss template by path [${scssFile}]")
             return null
         } catch (e) {
-            log.error("SCSS: Exception on compiling scss template by path [${path}]", e)
+            log.error("SCSS: Exception on compiling scss template by path [${scssFile}]", e)
             return null
         }
     }
 
-    static String compile(File scssFile, String path, Map config = [:]) {
+    static String compile(File scssFile, List paths, Boolean compass = false, Map config = [:]) {
         return ScssUtils.compile(
                 scssFile,
-                path,
+                paths,
+                compass,
                 config.syntax as String,
                 config.style as String,
                 config.debugInfo as Boolean,
-                config.lineComments as Boolean)
+                config.lineComments as Boolean,
+        )
     }
 
     static String getSyntax(String option, File scssFile) {

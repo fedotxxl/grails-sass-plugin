@@ -10,5 +10,9 @@ class ScssCompilerPluginUtils {
         return config.plugin.grailsSassMinePlugin
     }
 
+    static boolean pathContains(String path, String pathToCheck) {
+        return path.contains(pathToCheck) //todo change
+    }
+
 }
 

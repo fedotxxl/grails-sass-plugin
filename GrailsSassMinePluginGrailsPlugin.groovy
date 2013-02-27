@@ -4,7 +4,7 @@ import ru.gramant.ScssResourcesCompiler
 
 class GrailsSassMinePluginGrailsPlugin {
     // the plugin version
-    def version = "0.1.7.13"
+    def version = "0.1.7.19"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // resources that are excluded from plugin packaging
@@ -35,16 +35,19 @@ Brief summary/description of the plugin.
     def config
 
     def doWithConfigOptions = {
-        'resourcesMode'(type: Boolean, defaultValue: false)
+        'resourcesMode'(type: Boolean, defaultValue: true)
         'disk.compileOnAnyCommand'(type: Boolean, defaultValue: true)
-        'disk.folder.source'(type: String, defaultValue: '/web-app/scss')
-        'disk.folder.target'(type: String, defaultValue: '/web-app/scss_css')
+        'disk.folder.source'(type: String, defaultValue: 'scss')
+        'disk.folder.target'(type: String, defaultValue: 'scss_css')
         'disk.clearTargetFolder'(type: Boolean, defaultValue: true)
+        'disk.modules'(type: List, defaultValue: [])
         'resources.exceptionOnFailedCompilation'(type: Boolean, defaultValue: false)
+        'resources.modules.folder.source'(type: String, defaultValue: '')
         'syntax'(type: String, defaultValue: 'byFileDimension')
         'style'(type: String, defaultValue: "compact")
         'lineComments'(type: Boolean, defaultValue: false)
         'debugInfo'(type: Boolean, defaultValue: false)
+        'compass'(type: Boolean, defaultValue: false)
     }
 
     def onChange = { event ->
@@ -70,7 +73,7 @@ Brief summary/description of the plugin.
             if (config.resourcesMode) {
                 println "SCSS: compiler in resource mode"
 
-                resourcesCompiler = new ScssResourcesCompiler()
+                resourcesCompiler = new ScssResourcesCompiler(config)
                 //refreshing dependencies map
                 resourcesCompiler.calculateDependentFiles(files)
                 //enable resources trigger

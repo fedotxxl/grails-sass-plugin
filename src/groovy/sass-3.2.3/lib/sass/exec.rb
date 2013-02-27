@@ -255,7 +255,7 @@ END
           @options[:for_engine][:quiet] = true
         end
         opts.on('--compass', 'Make Compass imports available and load project configuration.') do
-          @options[:compass] = true
+          @options[:compass_1] = true
         end
         opts.on('-g', '--debug-info',
                 'Emit extra information in the generated CSS that can be used by the FireSass Firebug plugin.') do
@@ -302,7 +302,7 @@ END
             @options[:update] = true
           end
         end
-        load_compass if @options[:compass]
+        load_compass if @options[:compass_1]
         return interactive if @options[:interactive]
         return watch_or_update if @options[:watch] || @options[:update]
         super

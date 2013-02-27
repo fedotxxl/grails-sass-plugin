@@ -20,7 +20,7 @@ def compileScss(filesIn, filesTo)
   end
 end
 
-def compileSingleScss(template, params, loads_path)
+def compileSingleScss(template, params, loads_paths)
 
   convertedParams = Hash.new
 =begin
@@ -31,7 +31,7 @@ def compileSingleScss(template, params, loads_path)
 =end
 
   convertedParams[:cache] = false
-  convertedParams[:load_paths] = [loads_path]
+  convertedParams[:load_paths] = loads_paths
   convertedParams[:debug_info] = params['debug_info']
   convertedParams[:line_comments] = params['line_comments']
   convertedParams[:style] = params['style'].to_sym

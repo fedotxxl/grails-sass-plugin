@@ -1,28 +1,46 @@
 package ru.gramant
-
+import grails.util.PluginBuildSettings
 import groovy.util.logging.Slf4j
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.codehaus.groovy.grails.commons.GrailsApplication
+import org.codehaus.groovy.grails.plugins.GrailsPluginUtils
 
 @Slf4j
 class ScssDiskCompiler {
 
     private GrailsApplication application
     private ConfigObject config
-    private dependentProcessor
+    private ScssDependentProcessor dependentProcessor
+    private PluginBuildSettings pluginBuildSettings
+    private List modulesScssPaths
+    private String projectSourcePath
+    private String sourceFolder
+    private String targetFolder
 
     ScssDiskCompiler(GrailsApplication application, ConfigObject config) {
         this.application = application
         this.config = config
         this.dependentProcessor = new ScssDependentProcessor()
+        this.pluginBuildSettings = GrailsPluginUtils.getPluginBuildSettings()
+
+        refreshConfig()
+    }
+
+    void refreshConfig() {
+        this.sourceFolder = calculateSourceFolder()
+        this.targetFolder = calculateTargetFolder()
+        this.modulesScssPaths = calculateModulesScssPaths()
+        this.projectSourcePath = new File('.', sourceFolder).canonicalPath
     }
 
     void compileScssFiles(Collection<File> files) {
-        log.debug "SCSS: compiling files ${files} from [$sourceFolder] to [$targetFolder]"
+        def filteredFiles = files.findAll { needToProcess(it) }
 
-        files.each { file ->
-            checkFileAndCompile(file)
+        log.debug "SCSS: compiling files ${filteredFiles} from [$sourceFolder] to [$targetFolder]"
+
+        filteredFiles.each { file ->
+            compileScssFile(file)
         }
     }
 
@@ -35,27 +53,21 @@ class ScssDiskCompiler {
     }
 
     void checkFileAndCompileWithDependents(File sourceFile) {
-        if (checkFileAndCompile(sourceFile)) {
+        if (needToProcess(sourceFile)) {
+            //compile changed file
+            compileScssFile(sourceFile)
             //compile dependent scss files
             def files = dependentProcessor.getDependentFiles(sourceFile)
             if (files) {
                 log.debug "SCSS: compiling dependent on [${sourceFile.name}] files ${files}"
 
                 files.each { file ->
-                    checkFileAndCompile(file)
+                    compileScssFile(file)
                 }
             } else {
                 log.debug "SCSS: there is no dependent on [${sourceFile}] files"
             }
         }
-    }
-
-    private String getSourceFolder() {
-        return FilenameUtils.normalize(config.disk.folder.source)
-    }
-
-    private String getTargetFolder() {
-        return FilenameUtils.normalize(config.disk.folder.target)
     }
 
     private File getTargetFile(File sourceFile) {
@@ -67,31 +79,50 @@ class ScssDiskCompiler {
     }
 
     private boolean needToProcess(File file) {
-        return file.canonicalPath.contains(sourceFolder)
+        def path = file.canonicalPath
+        return ScssCompilerPluginUtils.pathContains(path, projectSourcePath) || modulesScssPaths.any { ScssCompilerPluginUtils.pathContains(path, it) }
     }
 
-    private boolean checkFileAndCompile(File sourceFile) {
-        if (needToProcess(sourceFile)) {
-            if (!isTemplate(sourceFile)) {
-                //this is not template... this should be compiled
-                def targetFile = getTargetFile(sourceFile)
-                def css = ScssUtils.compile(sourceFile, sourceFile.parent, config)
+    private compileScssFile(File sourceFile) {
+        if (!isTemplate(sourceFile)) {
+            //this is not template... this should be compiled
+            def targetFile = getTargetFile(sourceFile)
+            def css = ScssUtils.compile(sourceFile, modulesScssPaths, config.compass, config)
 
-                targetFile.parentFile.mkdirs()
-                if (css != null) {
-                    targetFile.write(css)
-                } else {
-                    targetFile.delete()
+            targetFile.parentFile.mkdirs()
+            if (css != null) {
+                targetFile.write(css)
+            } else {
+                targetFile.delete()
+            }
+        }
+
+        log.trace "SCSS: refreshing dependencies for file [${sourceFile}]"
+        dependentProcessor.refreshScssFile(sourceFile)
+    }
+
+    private calculateModulesScssPaths() {
+        def answer = []
+        def modules = config.disk.modules
+
+        if (modules) {
+            modules.each { module ->
+                def moduleFolder = pluginBuildSettings.getPluginDirForName(module)?.file
+                if (moduleFolder) {
+                    def file = new File(moduleFolder, sourceFolder)
+                    if (file.exists()) answer << file.canonicalPath
                 }
             }
-
-            log.trace "SCSS: refreshing dependencies for file [${sourceFile}]"
-            dependentProcessor.refreshScssFile(sourceFile)
-
-            return true
-        } else {
-            return false
         }
+
+        return answer
     }
 
+    private String calculateSourceFolder() {
+        return FilenameUtils.normalize('/web-app/' + config.disk.folder.source)
+    }
+
+    private String calculateTargetFolder() {
+        return FilenameUtils.normalize('/web-app/' + config.disk.folder.target)
+    }
 }

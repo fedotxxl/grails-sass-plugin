@@ -1,15 +1,16 @@
 import groovy.util.logging.Slf4j
+import org.codehaus.groovy.grails.plugins.GrailsPlugin
 import org.grails.plugin.resource.ResourceMeta
 import org.grails.plugin.resource.mapper.MapperPhase
-import grails.util.GrailsUtil
+import ru.gramant.CommonUtils
 import ru.gramant.ScssCompilerPluginUtils
 import ru.gramant.ScssUtils
-import org.slf4j.LoggerFactory
 
 @Slf4j
 class ScssResourceMapper {
 
     def grailsApplication
+    def pluginManager
     def phase = MapperPhase.GENERATION
 
     static defaultIncludes = ['**/*.scss', '**/*.sass']
@@ -25,8 +26,9 @@ class ScssResourceMapper {
 
                     log.debug "SCSS: Compiling SCSS file [${scssFile}] into [${cssFile}]"
 
-                    def path = grailsApplication.parentContext.getResource(resource.originalUrl)?.file?.parentFile?.absolutePath
-                    def compiled = ScssUtils.compile(scssFile, path, config)
+                    def realFile = getRealFile(resource.originalUrl)
+                    def paths = getScssCompilePaths(config)
+                    def compiled = ScssUtils.compile(realFile, paths, config.compass, config)
                     if (compiled != null) {
                         cssFile.write(compiled, "UTF-8")
 
@@ -46,6 +48,25 @@ class ScssResourceMapper {
                 log.error("SCSS: Exception while parsing file [${resource.processedFile}]", e)
             }
         }
+    }
+
+    private getScssCompilePaths(ConfigObject config) {
+        def answer = []
+        def path = config.resources.modules.folder.source
+
+        if (path) {
+            pluginManager.userPlugins.each { plugin ->
+                def file = getRealFile(path, plugin)
+                if (file?.exists()) answer << file.canonicalPath
+            }
+        }
+
+        return answer
+    }
+
+    private File getRealFile(String path, GrailsPlugin plugin = null) {
+        path = (plugin) ?  "/plugins/" + plugin.fullName + "/" + path : path
+        return grailsApplication.parentContext.getResource(path)?.file
     }
 
     private processCompilationFailure(ResourceMeta resource, ConfigObject config) {

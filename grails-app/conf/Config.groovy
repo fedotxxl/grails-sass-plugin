@@ -33,4 +33,6 @@ grails.sass.style = 'trololo'*/
 grails.resources.debug=false
 
 plugin.grailsSassMinePlugin.disk.compileOnAnyCommand = true
-
+plugin.grailsSassMinePlugin.disk.modules = ['abc', 'resources']
+plugin.grailsSassMinePlugin.resourcesMode = true
+plugin.grailsSassMinePlugin.compass = true
