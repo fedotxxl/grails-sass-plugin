@@ -1,5 +1,6 @@
 import org.springframework.core.io.FileSystemResource
 import ru.gramant.ScssCompilerPluginUtils
+import ru.gramant.ScssConfigHolder
 import ru.gramant.ScssDiskCompiler
 import ru.gramant.ScssResourcesCompiler
 
@@ -37,7 +38,7 @@ Brief summary/description of the plugin.
     ConfigObject config
 
     def doWithConfigOptions = {
-        'resourcesMode'(type: Boolean, defaultValue: true)
+        'resourcesMode'(type: Boolean, defaultValue: false)
         'disk.compileOnAnyCommand'(type: Boolean, defaultValue: true)
         'disk.folder.source'(type: String, defaultValue: 'scss')
         'disk.folder.target'(type: String, defaultValue: 'scss_css')
@@ -89,7 +90,7 @@ Brief summary/description of the plugin.
     def doWithWebDescriptor = {
         try {
             if (firstTime) {
-                config = ScssCompilerPluginUtils.getPluginsConfig(application.config)
+                config = ScssConfigHolder.config = ScssCompilerPluginUtils.getPluginsConfig(application.config)
                 resourcesMode = config.resourcesMode
 
                 def files = plugin.watchedResources.collect { it.file }

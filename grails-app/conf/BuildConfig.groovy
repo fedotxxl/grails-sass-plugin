@@ -16,6 +16,7 @@ grails.project.dependency.resolution = {
         grailsCentral()
         mavenCentral()
     }
+
     dependencies {
         compile "bsf:bsf:2.4.0"
         runtime "org.jruby:jruby-complete:1.6.8"
@@ -35,9 +36,6 @@ grails.project.dependency.resolution = {
         }
 
         compile ":platform-core:1.0.RC5"
-
-        compile(":resources:1.1.6") {
-            export = false //todo
-        }
+        compile ":resources:1.1.6"
     }
 }

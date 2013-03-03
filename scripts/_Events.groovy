@@ -6,7 +6,11 @@ eventCompileEnd = {
 }
 
 eventCreateWarStart = { warName, stagingDir ->
-    copyResources "$stagingDir/WEB-INF/classes"
+    ConfigObject config = ru.gramant.ScssConfigHolder.config
+
+    if (config.resourcesMode) {
+        copyResources "$stagingDir/WEB-INF/classes"
+    }
 }
 
 private copyResources(destination) {
@@ -14,7 +18,6 @@ private copyResources(destination) {
             failonerror: false,
             preservelastmodified: true) {
         for (String path in extraSrcDirs) {
-            println "FROM ${path} to ${destination}"
             fileset(dir: path) {
                 exclude(name: '*.groovy')
                 exclude(name: '*.java')
