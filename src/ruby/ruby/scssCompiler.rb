@@ -1,4 +1,4 @@
-require 'ruby/gems/sass-3.2.3/lib/sass'
+require 'sass-3.2.3/lib/sass'
 
 def compileSingleScss(template, params, loads_paths)
 

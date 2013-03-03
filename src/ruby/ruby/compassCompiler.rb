@@ -1,6 +1,6 @@
-require 'ruby/gems/sass-3.2.3/lib/sass'
-require 'ruby/gems/chunky_png-1.2.6/lib/chunky_png'
-require 'ruby/gems/compass-0.12.2/lib/compass'
+require 'gems/sass-3.2.3/lib/sass'
+require 'gems/chunky_png-1.2.6/lib/chunky_png'
+require 'gems/compass-0.12.2/lib/compass'
 
 def compileSingleScss(template, params, loads_paths)
 
