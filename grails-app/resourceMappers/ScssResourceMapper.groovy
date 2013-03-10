@@ -1,3 +1,5 @@
+package ru.gramant
+
 import groovy.util.logging.Slf4j
 import org.codehaus.groovy.grails.plugins.GrailsPlugin
 import org.grails.plugin.resource.ResourceMeta
@@ -11,6 +13,7 @@ class ScssResourceMapper {
     def grailsApplication
     def pluginManager
     def phase = MapperPhase.GENERATION
+    def cache = [:]
 
     static defaultIncludes = ['**/*.scss', '**/*.sass']
 
@@ -25,8 +28,15 @@ class ScssResourceMapper {
                     log.debug "SCSS: Compiling SCSS file [${scssFile}] into [${cssFile}]"
 
                     def realFile = getRealFile(resource.originalUrl)
-                    def paths = getScssCompilePaths(config)
-                    def compiled = ScssUtils.compile(realFile, paths, config.compass, config)
+                    def compiled = getFromCache(realFile)
+
+                    if (compiled) {
+                        log.debug "SCSS: for file ${scssFile} use data from cache"
+                    } else {
+                        def paths = getScssCompilePaths(config)
+                        compiled = ScssUtils.compile(realFile, paths, config.compass, config)
+                    }
+
                     if (compiled != null) {
                         cssFile.write(compiled, "UTF-8")
 
@@ -35,6 +45,8 @@ class ScssResourceMapper {
     //                  resource.sourceUrlExtension = 'css'
     //                  resource.tagAttributes.rel = 'stylesheet'
                         resource.actualUrl = "${resource.originalUrl}.css"
+
+                        addToCache(realFile, compiled)
                     } else {
                         processCompilationFailure(resource, config)
                     }
@@ -46,6 +58,21 @@ class ScssResourceMapper {
                 log.error("SCSS: Exception while parsing file [${resource.processedFile}]", e)
             }
         }
+    }
+
+    private addToCache(File file, String css) {
+        cache[file.canonicalPath] = [lastModified: file.lastModified(), css: css]
+    }
+
+    private getFromCache(File file) {
+        def answer = null
+
+        def data = cache[file.canonicalPath]
+        if (data) {
+            if (file.lastModified() == data.lastModified) answer = data.css
+        }
+
+        return answer
     }
 
     private getScssCompilePaths(ConfigObject config) {
