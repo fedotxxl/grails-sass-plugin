@@ -33,30 +33,28 @@ class ScssResourcesCompiler {
     }
 
     void calculateDependentFiles(List<File> files) {
-        def filteredFiles = files.findAll { needToProcess(it) }
+        log.debug "SCSS: refreshing dependencies for files ${files}"
 
-        log.debug "SCSS: refreshing dependencies for files ${filteredFiles}"
-
-        filteredFiles.each {
+        files.each {
             dependentProcessor.refreshScssFile(it)
         }
     }
 
     void checkFileAndCompileDependents(File sourceFile) {
-        if (needToProcess(sourceFile)) {
-            log.trace "SCSS: refreshing dependencies for file [${sourceFile}]"
-            dependentProcessor.refreshScssFile(sourceFile)
+        log.debug "Checking file [${sourceFile}] and compile dependent on it files"
 
-            def files = dependentProcessor.getDependentFiles(sourceFile)
-            if (files) {
-                log.debug "SCSS: touching dependent on [${sourceFile.name}] files ${files} to be recompiled by Resources plugin"
+        //update dependencies for changed file
+        dependentProcessor.refreshScssFile(sourceFile)
 
-                files.each { file ->
-                    touchFileToTriggerResourcePlugin(file)
-                }
-            } else {
-                log.debug "SCSS: there is no dependent on [${sourceFile}] files"
+        def files = dependentProcessor.getDependentFiles(sourceFile)
+        if (files) {
+            log.debug "SCSS: touching dependent on [${sourceFile.name}] files ${files} to be recompiled by Resources plugin"
+
+            files.each { file ->
+                touchFileToTriggerResourcePlugin(file)
             }
+        } else {
+            log.debug "SCSS: there is no dependent on [${sourceFile}] files"
         }
     }
 
@@ -76,15 +74,4 @@ class ScssResourcesCompiler {
         FileUtils.touch(file)
     }
 
-    private boolean needToProcess(File file) {
-        def path = file.canonicalPath
-
-        if (ScssCompilerPluginUtils.pathContains(path, projectPath)) {
-            return true
-        } else if (sourceFolder && ScssCompilerPluginUtils.pathContains(path, sourceFolder)) {
-            return true
-        } else {
-            return false
-        }
-    }
 }
