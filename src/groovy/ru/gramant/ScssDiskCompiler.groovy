@@ -54,6 +54,8 @@ class ScssDiskCompiler {
 
     void checkFileAndCompileWithDependents(File sourceFile) {
         if (needToProcess(sourceFile)) {
+            log.debug "Checking file [${sourceFile}] and compile dependent on it files"
+
             //compile changed file
             compileScssFile(sourceFile)
             //compile dependent scss files

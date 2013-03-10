@@ -4,11 +4,16 @@
  */
 package ru.gramant
 
+import groovy.util.logging.Slf4j
+
+@Slf4j
 class ScssDependentProcessor {
 
     private dependOnFiles = [:].withDefault { key -> []}
 
     void refreshScssFile(File file) {
+        log.trace "SCSS: refreshing dependencies for file [${file}]"
+
         if (file.exists()) {
             dependOnFiles[file.canonicalPath] = ScssUtils.getDependOnScssNames(file.text)
         } else {
