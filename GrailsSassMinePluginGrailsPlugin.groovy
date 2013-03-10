@@ -103,7 +103,7 @@ Brief summary/description of the plugin.
                     //enable resources trigger
                     resourcesCompiler.setupResourcesCompileSettings()
                 } else {
-                    println "SCSS: compile in static mode"
+                    println "SCSS: compile in disk mode"
 
                     diskCompiler = new ScssDiskCompiler(application, config)
                     //resources mode is disabled... may be we should compile scss
