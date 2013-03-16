@@ -19,7 +19,7 @@ class ScssResourceMapper {
 
     def map(ResourceMeta resource, c) {
         ConfigObject config = ScssCompilerPluginUtils.getPluginsConfig(grailsApplication.config)
-        if (config.resourcesMode) {
+        if (ScssCompilerPluginUtils.isResourcesMode(config)) {
             try {
                 File scssFile = resource.processedFile
                 if (resource.originalUrl && ScssCompilerPluginUtils.isScssFile(scssFile)) {

@@ -38,7 +38,7 @@ Brief summary/description of the plugin.
     ConfigObject config
 
     def doWithConfigOptions = {
-        'resourcesMode'(type: Boolean, defaultValue: false)
+        'mode'(type: String, defaultValue: 'disk')
         'disk.compileOnAnyCommand'(type: Boolean, defaultValue: true)
         'disk.folder.source'(type: String, defaultValue: 'scss')
         'disk.folder.target'(type: String, defaultValue: 'scss_css')
@@ -60,7 +60,7 @@ Brief summary/description of the plugin.
 
                 //similar to https://github.com/bobbywarner/grails-ruby/blob/master/RubyGrailsPlugin.groovy
                 if (ScssCompilerPluginUtils.isScssFile(file)) {
-                    if (config.resourcesMode) {
+                    if (resourcesMode) {
                         resourcesCompiler.checkFileAndCompileDependents(file)
                     } else {
                         diskCompiler.checkFileAndCompileWithDependents(file)
@@ -91,7 +91,7 @@ Brief summary/description of the plugin.
         try {
             if (firstTime) {
                 config = ScssConfigHolder.config = ScssCompilerPluginUtils.getPluginsConfig(application.config)
-                resourcesMode = config.resourcesMode
+                resourcesMode = ScssCompilerPluginUtils.isResourcesMode(config)
 
                 def files = plugin.watchedResources.collect { it.file }
                 if (resourcesMode) {
