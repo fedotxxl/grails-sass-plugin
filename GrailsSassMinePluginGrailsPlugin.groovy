@@ -30,7 +30,7 @@ Brief summary/description of the plugin.
     // URL to the plugin's documentation
     def documentation = "http://grails.org/plugin/grails-sass-mine-plugin"
 
-    Boolean firstTime = true
+    Boolean loaded = true
     Boolean resourcesMode = false
     Boolean shouldBeCompiled = System.getProperty("scss.compile")
     ScssDiskCompiler diskCompiler
@@ -82,6 +82,27 @@ Brief summary/description of the plugin.
     }
 
     def doWithSpring = {
+        try {
+            if (loaded) {
+                config = ScssConfigHolder.config = ScssCompilerPluginUtils.getPluginsConfig(application.config)
+                resourcesMode = ScssCompilerPluginUtils.isResourcesMode(config)
+
+                if (resourcesMode) {
+                    println "SCSS: compiler in resource mode"
+
+                    resourcesCompiler = new ScssResourcesCompiler(application)
+                    //refreshing dependencies map
+                    resourcesCompiler.calculateDependentFiles(getWatchedFiles(plugin))
+                    //enable resources trigger
+                    resourcesCompiler.setupResourcesCompileSettings()
+
+                    loaded = false
+                }
+            }
+        } catch (Throwable e) {
+            println "SCSS: exception on plugin startup - " + e
+            e.printStackTrace()
+        }
     }
 
     def doWithApplicationContext = {
@@ -89,37 +110,32 @@ Brief summary/description of the plugin.
 
     def doWithWebDescriptor = {
         try {
-            if (firstTime) {
+            if (loaded) {
                 config = ScssConfigHolder.config = ScssCompilerPluginUtils.getPluginsConfig(application.config)
                 resourcesMode = ScssCompilerPluginUtils.isResourcesMode(config)
 
-                def files = plugin.watchedResources.collect { it.file }
-                if (resourcesMode) {
-                    println "SCSS: compiler in resource mode"
-
-                    resourcesCompiler = new ScssResourcesCompiler(config)
-                    //refreshing dependencies map
-                    resourcesCompiler.calculateDependentFiles(files)
-                    //enable resources trigger
-                    resourcesCompiler.setupResourcesCompileSettings()
-                } else {
+                if (!resourcesMode) {
                     println "SCSS: compile in disk mode"
 
-                    diskCompiler = new ScssDiskCompiler(application, config)
+                    diskCompiler = new ScssDiskCompiler(application)
                     //resources mode is disabled... may be we should compile scss
                     if (config.disk.compileOnAnyCommand || shouldBeCompiled) {
                         //may be we should clear target folder?
                         if (config.disk.clearTargetFolder) diskCompiler.clearTargetFolder()
                         //let's compile scss files...
-                        diskCompiler.compileScssFiles(files)
+                        diskCompiler.compileScssFiles(getWatchedFiles(plugin))
                     }
+
+                    loaded = false
                 }
             }
-
-            firstTime = false
         } catch (Throwable e) {
-            println "SCSS: exception on plugin startup"
+            println "SCSS: exception on plugin startup - " + e
             e.printStackTrace()
         }
+    }
+
+    private List<File> getWatchedFiles(plugin) {
+        return plugin.watchedResources.collect { it.file }
     }
 }

@@ -7,20 +7,20 @@ import org.codehaus.groovy.grails.commons.GrailsApplication
 import org.codehaus.groovy.grails.plugins.GrailsPluginUtils
 
 @Slf4j
-class ScssDiskCompiler {
+class ScssDiskCompiler extends AbstractScssCompiler {
 
-    private GrailsApplication application
-    private ConfigObject config
+//    private GrailsApplication application
+//    private ConfigObject config
     private ScssDependentProcessor dependentProcessor
     private PluginBuildSettings pluginBuildSettings
-    private List modulesScssPaths
     private String projectSourcePath
     private String sourceFolder
     private String targetFolder
 
-    ScssDiskCompiler(GrailsApplication application, ConfigObject config) {
-        this.application = application
-        this.config = config
+    ScssDiskCompiler(GrailsApplication application) {
+        super(application)
+//        this.application = application
+//        this.config = config
         this.dependentProcessor = new ScssDependentProcessor()
         this.pluginBuildSettings = GrailsPluginUtils.getPluginBuildSettings()
 
@@ -28,9 +28,9 @@ class ScssDiskCompiler {
     }
 
     void refreshConfig() {
+        super.refreshConfig();
         this.sourceFolder = calculateSourceFolder()
         this.targetFolder = calculateTargetFolder()
-        this.modulesScssPaths = calculateModulesScssPaths()
         this.projectSourcePath = new File('.', sourceFolder).canonicalPath
     }
 
@@ -82,14 +82,14 @@ class ScssDiskCompiler {
 
     private boolean needToProcess(File file) {
         def path = file.canonicalPath
-        return ScssCompilerPluginUtils.pathContains(path, projectSourcePath) || modulesScssPaths.any { ScssCompilerPluginUtils.pathContains(path, it) }
+        return ScssCompilerPluginUtils.pathContains(path, projectSourcePath) || scssCompilePaths.any { ScssCompilerPluginUtils.pathContains(path, it) }
     }
 
     private compileScssFile(File sourceFile) {
         if (!isTemplate(sourceFile)) {
             //this is not template... this should be compiled
             def targetFile = getTargetFile(sourceFile)
-            def css = ScssUtils.compile(sourceFile, modulesScssPaths, config.compass, config)
+            def css = ScssUtils.compile(sourceFile, scssCompilePaths, config.compass, config)
 
             targetFile.parentFile.mkdirs()
             if (css != null) {
@@ -103,22 +103,22 @@ class ScssDiskCompiler {
         dependentProcessor.refreshScssFile(sourceFile)
     }
 
-    private calculateModulesScssPaths() {
-        def answer = []
-        def modules = config.disk.modules
-
-        if (modules) {
-            modules.each { module ->
-                def moduleFolder = pluginBuildSettings.getPluginDirForName(module)?.file
-                if (moduleFolder) {
-                    def file = new File(moduleFolder, sourceFolder)
-                    if (file.exists()) answer << file.canonicalPath
-                }
-            }
-        }
-
-        return answer
-    }
+//    private calculateModulesScssPaths() {
+//        def answer = []
+//        def modules = config.disk.modules
+//
+//        if (modules) {
+//            modules.each { module ->
+//                def moduleFolder = pluginBuildSettings.getPluginDirForName(module)?.file
+//                if (moduleFolder) {
+//                    def file = new File(moduleFolder, sourceFolder)
+//                    if (file.exists()) answer << file.canonicalPath
+//                }
+//            }
+//        }
+//
+//        return answer
+//    }
 
     private String calculateSourceFolder() {
         return FilenameUtils.normalize('/web-app/' + config.disk.folder.source)

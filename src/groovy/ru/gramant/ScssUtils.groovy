@@ -16,9 +16,12 @@ class ScssUtils {
 
     static ScriptEngine jruby = null
 
-    static String compile(File scssFile, List loadsPath, Boolean compass, String syntax, String style, Boolean debugInfo, Boolean lineComments) {
+    static String compile(File scssFile, List loadPaths, Boolean compass, String syntax, String style, Boolean debugInfo, Boolean lineComments) {
         try {
+            def fullLoadPaths = [scssFile.parent] + loadPaths
+
             log.info "SCSS: Compiling scss file [${scssFile}], syntax ${syntax}, style ${style}"
+            log.debug "SCSS: loadPaths ${fullLoadPaths}"
 
             if (!jruby) {
                 //process a ruby file
@@ -41,9 +44,9 @@ class ScssUtils {
             //call a method defined in the ruby source
             jruby.put("template", scssFile.text);
             jruby.put("params", params);
-            jruby.put("loads_paths", [scssFile.parent] + loadsPath)
+            jruby.put("load_paths", fullLoadPaths)
 
-            return (String) jruby.eval("compileSingleScss(\$template, \$params, \$loads_paths)");
+            return (String) jruby.eval("compileSingleScss(\$template, \$params, \$load_paths)");
         } catch (RaiseException re) {
             log.error("SCSS: Exception on compiling scss template by path [${scssFile}]")
             return null

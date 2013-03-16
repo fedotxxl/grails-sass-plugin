@@ -8,15 +8,15 @@ class ScssCompilerPluginUtils {
 
     private static SCSS_FILE_EXTENSIONS = ['.scss', '.sass']
 
-    static getPluginsConfig(config) {
+    static ConfigObject getPluginsConfig(ConfigObject config) {
         return config.plugin.grailsSassMinePlugin
     }
 
-    static Boolean isResourcesMode(config) {
+    static Boolean isResourcesMode(ConfigObject config) {
         return config.mode == 'resources'
     }
 
-    static Boolean isDiskMode(config) {
+    static Boolean isDiskMode(ConfigObject config) {
         return !isResourcesMode(config)
     }
 
@@ -32,6 +32,10 @@ class ScssCompilerPluginUtils {
         }
 
         return false
+    }
+
+    static List toList(value) {
+        [value].flatten().findAll { it != null }
     }
 
 }

@@ -1,24 +1,27 @@
-package ru.gramant
-
-import groovy.util.logging.Slf4j
 import org.codehaus.groovy.grails.plugins.GrailsPlugin
 import org.grails.plugin.resource.ResourceMeta
 import org.grails.plugin.resource.mapper.MapperPhase
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import ru.gramant.ScssCompilerPluginUtils
 import ru.gramant.ScssUtils
 
-@Slf4j
 class ScssResourceMapper {
+
+    private static final Logger log = LoggerFactory.getLogger("ru.gramant.ScssResourceMapper")
 
     def grailsApplication
     def pluginManager
-    def phase = MapperPhase.GENERATION
+    def configObject
+
     def cache = [:]
 
+    static phase = MapperPhase.GENERATION
     static defaultIncludes = ['**/*.scss', '**/*.sass']
 
     def map(ResourceMeta resource, c) {
-        ConfigObject config = ScssCompilerPluginUtils.getPluginsConfig(grailsApplication.config)
+        log.trace "SCSS: processing SCSS resource: ${resource}"
+
         if (ScssCompilerPluginUtils.isResourcesMode(config)) {
             try {
                 File scssFile = resource.processedFile
@@ -75,7 +78,7 @@ class ScssResourceMapper {
         return answer
     }
 
-    private getScssCompilePaths(ConfigObject config) {
+    List<String> getScssCompilePaths(ConfigObject config) {
         def answer = []
         def path = config.resources.modules.folder.source
 
@@ -103,5 +106,12 @@ class ScssResourceMapper {
         }
     }
 
+    private getConfig() {
+        if (!configObject) {
+            configObject = ScssCompilerPluginUtils.getPluginsConfig(grailsApplication.config)
+        }
+
+        return configObject
+    }
 
 }

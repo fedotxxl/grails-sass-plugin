@@ -3,33 +3,22 @@
  * Copyright (c) 2012 Cybervision. All rights reserved.
  */
 package ru.gramant
-
 import groovy.util.logging.Slf4j
 import org.apache.commons.io.FileUtils
-import org.apache.commons.io.FilenameUtils
+import org.codehaus.groovy.grails.commons.GrailsApplication
 import org.grails.plugin.resource.ResourceProcessor
 import org.grails.plugin.resource.ResourceTagLib
 import org.grails.plugin.resource.CSSPreprocessorResourceMapper
 import org.grails.plugin.resource.CSSRewriterResourceMapper
 
 @Slf4j
-class ScssResourcesCompiler {
+class ScssResourcesCompiler extends AbstractScssCompiler {
 
-    private ConfigObject config
     private ScssDependentProcessor dependentProcessor
-    private String sourceFolder
-    private String projectPath
 
-    ScssResourcesCompiler(ConfigObject config) {
-        this.config = config
+    ScssResourcesCompiler(GrailsApplication grailsApplication) {
+        super(grailsApplication)
         this.dependentProcessor = new ScssDependentProcessor()
-        this.projectPath = new File('.').canonicalPath
-
-        refreshConfig()
-    }
-
-    void refreshConfig() {
-        this.sourceFolder = FilenameUtils.normalize(config.resources.modules.folder.source)
     }
 
     void calculateDependentFiles(List<File> files) {
@@ -59,6 +48,8 @@ class ScssResourcesCompiler {
     }
 
     void setupResourcesCompileSettings() {
+        log.debug "SCSS: register resources compile settings"
+
         CSSPreprocessorResourceMapper.defaultIncludes.add('**/*.scss')
         CSSRewriterResourceMapper.defaultIncludes.add('**/*.scss')
 
