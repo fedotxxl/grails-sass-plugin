@@ -2,7 +2,7 @@ require 'gems/sass-3.2.3/lib/sass'
 require 'gems/chunky_png-1.2.6/lib/chunky_png'
 require 'gems/compass-0.12.2/lib/compass'
 
-def compileSingleScss(template, params, loads_paths)
+def compileSingleScss(template, params, load_paths)
 
   Compass.add_configuration(
       {
@@ -13,11 +13,11 @@ def compileSingleScss(template, params, loads_paths)
 
   convertedParams = Hash.new
 
-  loads_paths.add(File.join(Compass.base_directory, 'frameworks/compass/stylesheets'))
-  loads_paths.add(File.join(Compass.base_directory, 'frameworks/blueprint/stylesheets'))
+  load_paths.add(File.join(Compass.base_directory, 'frameworks/compass/stylesheets'))
+  load_paths.add(File.join(Compass.base_directory, 'frameworks/blueprint/stylesheets'))
 
   convertedParams[:cache] = false
-  convertedParams[:load_paths] = loads_paths
+  convertedParams[:load_paths] = load_paths
   convertedParams[:debug_info] = params['debug_info']
   convertedParams[:line_comments] = params['line_comments']
   convertedParams[:style] = params['style'].to_sym
