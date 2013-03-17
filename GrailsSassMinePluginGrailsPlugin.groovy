@@ -40,8 +40,7 @@ Brief summary/description of the plugin.
     def doWithConfigOptions = {
         'mode'(type: String, defaultValue: 'disk')
         'disk.compileOnAnyCommand'(type: Boolean, defaultValue: true)
-        'disk.folder.source'(type: String, defaultValue: 'scss')
-        'disk.folder.target'(type: String, defaultValue: 'scss_css')
+        //'disk.folders'(type: Map, defaultValue: ['scss': 'scss_css']) - can't define it because of PC bug http://jira.grails.org/browse/GPPLATFORMCORE-44
         'disk.clearTargetFolder'(type: Boolean, defaultValue: true)
         'disk.modules'(type: List, defaultValue: [])
         'resources.exceptionOnFailedCompilation'(type: Boolean, defaultValue: false)
