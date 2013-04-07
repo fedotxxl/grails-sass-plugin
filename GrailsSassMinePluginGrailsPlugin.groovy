@@ -1,6 +1,6 @@
 import groovy.util.logging.Slf4j
 import org.springframework.core.io.FileSystemResource
-import ru.gramant.ScssCompilerPluginUtils
+import ru.gramant.ScssCompilerPluginUtils as PluginUtils
 import ru.gramant.ScssConfigHolder
 import ru.gramant.ScssDiskCompiler
 import ru.gramant.ScssResourcesCompiler
@@ -33,11 +33,9 @@ Brief summary/description of the plugin.
     def documentation = "http://grails.org/plugin/grails-sass-mine-plugin"
 
     Boolean loaded = true
-    Boolean resourcesMode = false
     Boolean shouldBeCompiled = System.getProperty("scss.compile")
     ScssDiskCompiler diskCompiler
     ScssResourcesCompiler resourcesCompiler
-    ConfigObject config
 
     def doWithConfigOptions = {
         'mode'(type: String, defaultValue: 'disk')
@@ -52,6 +50,7 @@ Brief summary/description of the plugin.
         'lineComments'(type: Boolean, defaultValue: false)
         'debugInfo'(type: Boolean, defaultValue: false)
         'compass'(type: Boolean, defaultValue: false)
+        'relativePaths'(type: Boolean, defaultValue: true)
     }
 
     def onChange = { event ->
@@ -60,10 +59,10 @@ Brief summary/description of the plugin.
                 File file = event.source.file
 
                 //similar to https://github.com/bobbywarner/grails-ruby/blob/master/RubyGrailsPlugin.groovy
-                if (ScssCompilerPluginUtils.isScssFile(file)) {
+                if (PluginUtils.isScssFile(file)) {
                     log.info "SCSS: change detected - ${file}"
 
-                    if (resourcesMode) {
+                    if (PluginUtils.isResourcesMode()) {
                         resourcesCompiler.checkFileAndCompileDependents(file)
                     } else {
                         diskCompiler.checkFileAndCompileWithDependents(file)
@@ -77,7 +76,7 @@ Brief summary/description of the plugin.
     }
 
     def onConfigChange = { event ->
-        if (resourcesMode) {
+        if (PluginUtils.isResourcesMode()) {
             resourcesCompiler?.refreshConfig()
         } else {
             diskCompiler?.refreshConfig()
@@ -87,10 +86,9 @@ Brief summary/description of the plugin.
     def doWithSpring = {
         try {
             if (loaded) {
-                config = ScssConfigHolder.config = ScssCompilerPluginUtils.getPluginsConfig(application.config)
-                resourcesMode = ScssCompilerPluginUtils.isResourcesMode(config)
+                ScssConfigHolder.readPluginsConfig(application.config)
 
-                if (resourcesMode) {
+                if (PluginUtils.isResourcesMode()) {
                     println "SCSS: compiler in resource mode"
 
                     resourcesCompiler = new ScssResourcesCompiler(application)
@@ -114,20 +112,19 @@ Brief summary/description of the plugin.
     def doWithWebDescriptor = {
         try {
             if (loaded) {
-                config = ScssConfigHolder.config = ScssCompilerPluginUtils.getPluginsConfig(application.config)
-                resourcesMode = ScssCompilerPluginUtils.isResourcesMode(config)
+                ScssConfigHolder.readPluginsConfig(application.config)
 
-                if (!resourcesMode) {
+                if (PluginUtils.isDiskMode()) {
                     println "SCSS: compile in disk mode"
 
                     diskCompiler = new ScssDiskCompiler(application)
                     //resources mode is disabled... may be we should compile scss
-                    if (config.disk.compileOnAnyCommand || shouldBeCompiled) {
+                    if (ScssConfigHolder.config.disk.compileOnAnyCommand || shouldBeCompiled) {
                         def files = getWatchedFiles(plugin)
                         //refreshing dependencies map
                         diskCompiler.calculateDependentFiles(files)
                         //may be we should clear target folder?
-                        if (config.disk.clearTargetFolder) diskCompiler.clearTargetFolder()
+                        if (ScssConfigHolder.config.disk.clearTargetFolder) diskCompiler.clearTargetFolder()
                         //let's compile scss files...
                         diskCompiler.compileScssFiles(files)
                     }

@@ -12,13 +12,11 @@ import org.codehaus.groovy.grails.plugins.GrailsPluginUtils
 class AbstractScssCompiler {
 
     protected compilePaths = []
-    protected ConfigObject config
     protected GrailsApplication grailsApplication
     protected File projectFolder
 
     AbstractScssCompiler(GrailsApplication grailsApplication) {
         this.grailsApplication = grailsApplication
-        this.config = ScssCompilerPluginUtils.getPluginsConfig(grailsApplication.config)
         this.projectFolder = new File('.')
         refreshConfig()
     }
@@ -29,7 +27,7 @@ class AbstractScssCompiler {
 
     List<String> getScssCompilePaths() {
         if (!compilePaths) {
-            def modules = config.modules ?: [:]
+            def modules = ScssConfigHolder.config.modules ?: [:]
 
              modules.each {
                 def plugin = it.key
@@ -47,7 +45,7 @@ class AbstractScssCompiler {
     }
 
     File getRealFile(String path, String plugin = null) {
-        if (ScssCompilerPluginUtils.isResourcesMode(config)) {
+        if (ScssCompilerPluginUtils.isResourcesMode()) {
             path = (plugin) ?  "/plugins/" + plugin + "/" + path : path
             return grailsApplication.parentContext.getResource(path)?.file
         } else {

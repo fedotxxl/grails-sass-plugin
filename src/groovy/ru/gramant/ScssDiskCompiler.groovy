@@ -105,7 +105,7 @@ class ScssDiskCompiler extends AbstractScssCompiler {
             if (dontCheckLastModified || isModifiedSinceLastCompile(sourceFile, targetFiles)) {
                 log.debug "SCSS: compiling file ${sourceFile} to ${targetFiles}"
 
-                def css = ScssUtils.compile(sourceFile, scssCompilePaths, config.compass, config)
+                def css = ScssUtils.compile(sourceFile, scssCompilePaths, ScssConfigHolder.config.compass, ScssConfigHolder.config)
 
                 targetFiles.each { targetFile ->
                     targetFile.parentFile.mkdirs()
@@ -185,7 +185,7 @@ class ScssDiskCompiler extends AbstractScssCompiler {
 
     private getDiskFolders() {
         def defaultValue = ['scss': 'scss_css']
-        def configValue = config.disk.folders
+        def configValue = ScssConfigHolder.config.disk.folders
 
         return (configValue instanceof Map) ? configValue : defaultValue
     }

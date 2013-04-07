@@ -4,20 +4,18 @@
  */
 package ru.gramant
 
+import org.apache.commons.io.FilenameUtils
+
 class ScssCompilerPluginUtils {
 
     private static SCSS_FILE_EXTENSIONS = ['.scss', '.sass']
 
-    static ConfigObject getPluginsConfig(ConfigObject config) {
-        return config.plugin.grailsSassMinePlugin
+    static Boolean isResourcesMode() {
+        return ScssConfigHolder.config.mode == 'resources'
     }
 
-    static Boolean isResourcesMode(ConfigObject config) {
-        return config.mode == 'resources'
-    }
-
-    static Boolean isDiskMode(ConfigObject config) {
-        return !isResourcesMode(config)
+    static Boolean isDiskMode() {
+        return !isResourcesMode()
     }
 
     static boolean pathContains(String path, String pathToCheck) {
@@ -36,6 +34,21 @@ class ScssCompilerPluginUtils {
 
     static List toList(value) {
         [value].flatten().findAll { it != null }
+    }
+
+    static String relativeToProjectPath(File file) {
+        def basePath = FilenameUtils.separatorsToUnix(FilenameUtils.normalize(System.properties['base.dir']))
+        def filePath = FilenameUtils.separatorsToUnix(FilenameUtils.normalize(file.canonicalPath))
+
+        if (filePath.startsWith(basePath)) {
+            return "/" + filePath.substring(basePath.length()+1)
+        } else {
+            return filePath
+        }
+    }
+
+    static List<String> relativeToProjectPath(Collection<File> files) {
+        return files.collect { relativeToProjectPath(it) }
     }
 
 }

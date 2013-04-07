@@ -8,4 +8,8 @@ class ScssConfigHolder {
 
     static ConfigObject config
 
+    static void readPluginsConfig(ConfigObject config) {
+        this.config = config.plugin.grailsSassMinePlugin
+    }
+
 }

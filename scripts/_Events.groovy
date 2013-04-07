@@ -6,9 +6,7 @@ eventCompileEnd = {
 }
 
 eventCreateWarStart = { warName, stagingDir ->
-    ConfigObject config = ru.gramant.ScssConfigHolder.config
-
-    if (ru.gramant.ScssCompilerPluginUtils.isResourcesMode(config)) {
+    if (ru.gramant.ScssCompilerPluginUtils.isResourcesMode()) {
         copyResources "$stagingDir/WEB-INF/classes"
     }
 }

@@ -4,6 +4,7 @@ import org.grails.plugin.resource.mapper.MapperPhase
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import ru.gramant.ScssCompilerPluginUtils
+import ru.gramant.ScssConfigHolder
 import ru.gramant.ScssUtils
 
 class ScssResourceMapper {
@@ -12,7 +13,6 @@ class ScssResourceMapper {
 
     def grailsApplication
     def pluginManager
-    def configObject
 
     def cache = [:]
 
@@ -20,9 +20,9 @@ class ScssResourceMapper {
     static defaultIncludes = ['**/*.scss', '**/*.sass']
 
     def map(ResourceMeta resource, c) {
-        log.trace "SCSS: processing SCSS resource: ${resource}"
+        if (ScssCompilerPluginUtils.isResourcesMode()) {
+            log.trace "SCSS: processing SCSS resource: ${resource}"
 
-        if (ScssCompilerPluginUtils.isResourcesMode(config)) {
             try {
                 File scssFile = resource.processedFile
                 if (resource.originalUrl && ScssCompilerPluginUtils.isScssFile(scssFile)) {
@@ -36,8 +36,8 @@ class ScssResourceMapper {
                     if (compiled) {
                         log.debug "SCSS: for file ${scssFile} use data from cache"
                     } else {
-                        def paths = getScssCompilePaths(config)
-                        compiled = ScssUtils.compile(realFile, paths, config.compass, config)
+                        def paths = getScssCompilePaths()
+                        compiled = ScssUtils.compile(realFile, paths, ScssConfigHolder.config.compass, ScssConfigHolder.config)
                     }
 
                     if (compiled != null) {
@@ -50,14 +50,16 @@ class ScssResourceMapper {
                         resource.actualUrl = "${resource.originalUrl}.css"
 
                         addToCache(realFile, compiled)
+
+                        log.info "SCSS: overwrite ${resource.originalUrl}"
                     } else {
-                        processCompilationFailure(resource, config)
+                        processCompilationFailure(resource)
                     }
                 } else {
                     log.debug("SCSS: skipped file [${scssFile}]")
                 }
             } catch (e) {
-                processCompilationFailure(resource, config)
+                processCompilationFailure(resource)
                 log.error("SCSS: Exception while parsing file [${resource.processedFile}]", e)
             }
         }
@@ -78,9 +80,9 @@ class ScssResourceMapper {
         return answer
     }
 
-    List<String> getScssCompilePaths(ConfigObject config) {
+    List<String> getScssCompilePaths() {
         def answer = []
-        def path = config.resources.modules.folder.source
+        def path = ScssConfigHolder.config.resources.modules.folder.source
 
         if (path) {
             pluginManager.userPlugins.each { plugin ->
@@ -97,21 +99,12 @@ class ScssResourceMapper {
         return grailsApplication.parentContext.getResource(path)?.file
     }
 
-    private processCompilationFailure(ResourceMeta resource, ConfigObject config) {
-        if (config.resources.exceptionOnFailedCompilation) {
+    private processCompilationFailure(ResourceMeta resource) {
+        if (ScssConfigHolder.config.resources.exceptionOnFailedCompilation) {
             resource.processedFile = new File('non_existing_file.css')
             resource.updateExists()
         } else {
             resource.actualUrl = "${resource.originalUrl}.FAILED.scss"
         }
     }
-
-    private getConfig() {
-        if (!configObject) {
-            configObject = ScssCompilerPluginUtils.getPluginsConfig(grailsApplication.config)
-        }
-
-        return configObject
-    }
-
 }
