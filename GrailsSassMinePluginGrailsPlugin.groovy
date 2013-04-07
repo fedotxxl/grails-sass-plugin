@@ -88,11 +88,11 @@ Brief summary/description of the plugin.
         try {
             if (loaded) {
                 ScssConfigHolder.readPluginsConfig(application.config)
+                resourcesCompiler = new ScssResourcesCompiler(application)
 
                 if (PluginUtils.isResourcesMode()) {
                     println "SCSS: compiler in resource mode"
 
-                    resourcesCompiler = new ScssResourcesCompiler(application)
                     //refreshing dependencies map
                     resourcesCompiler.calculateDependentFiles(getWatchedFiles(plugin))
                     //enable resources trigger
@@ -114,11 +114,11 @@ Brief summary/description of the plugin.
         try {
             if (loaded) {
                 ScssConfigHolder.readPluginsConfig(application.config)
+                diskCompiler = new ScssDiskCompiler(application)
 
                 if (PluginUtils.isDiskMode()) {
                     println "SCSS: compile in disk mode"
 
-                    diskCompiler = new ScssDiskCompiler(application)
                     //resources mode is disabled... may be we should compile scss
                     if (ScssConfigHolder.config.disk.compileOnAnyCommand || shouldBeCompiled) {
                         def files = getWatchedFiles(plugin)
