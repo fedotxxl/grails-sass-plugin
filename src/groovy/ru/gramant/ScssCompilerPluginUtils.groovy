@@ -10,6 +10,8 @@ class ScssCompilerPluginUtils {
 
     private static SCSS_FILE_EXTENSIONS = ['.scss', '.sass']
 
+    private static List relativeProjectPaths = []
+
     static Boolean isResourcesMode() {
         return ScssConfigHolder.config.mode == 'resources'
     }
@@ -37,14 +39,23 @@ class ScssCompilerPluginUtils {
     }
 
     static String relativeToProjectPath(File file) {
-        def basePath = FilenameUtils.separatorsToUnix(FilenameUtils.normalize(System.properties['base.dir']))
-        def filePath = FilenameUtils.separatorsToUnix(FilenameUtils.normalize(file.canonicalPath))
-
-        if (basePath && filePath.startsWith(basePath)) {
-            return "/" + filePath.substring(basePath.length()+1)
-        } else {
-            return filePath
+        if (!relativeProjectPaths) {
+            def base = new File(System.properties['base.dir'])
+            if (base) {
+                relativeProjectPaths = [base.canonicalPath, base.parentFile.canonicalPath]
+            }
         }
+
+        def filePath = file.canonicalPath
+        for (int i = 0; i < relativeProjectPaths.size(); i++) {
+            def basePath = relativeProjectPaths[i]
+            if (basePath && filePath.startsWith(basePath)) {
+                def prefix = (i == 0) ? "/" : i.collect { "../" }.join("")
+                return prefix + FilenameUtils.separatorsToUnix(filePath.substring(basePath.length()+1))
+            }
+        }
+
+        return filePath
     }
 
     static List<String> relativeToProjectPath(Collection<File> files) {
