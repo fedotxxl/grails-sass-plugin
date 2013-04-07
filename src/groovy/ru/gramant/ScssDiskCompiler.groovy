@@ -3,6 +3,7 @@ package ru.gramant
 import groovy.util.logging.Slf4j
 import org.apache.commons.io.FilenameUtils
 import org.codehaus.groovy.grails.commons.GrailsApplication
+import static ru.gramant.ScssCompilerPluginUtils.relativeToProjectPath
 
 @Slf4j
 class ScssDiskCompiler extends AbstractScssCompiler {
@@ -26,6 +27,14 @@ class ScssDiskCompiler extends AbstractScssCompiler {
         this.folders = calculateFolders()
     }
 
+    void calculateDependentFiles(Collection<File> files) {
+        log.debug "SCSS: refreshing dependencies for files ${files}"
+
+        files.each {
+            dependentProcessor.refreshScssFile(it)
+        }
+    }
+
     void compileScssFiles(Collection<File> files) {
         def filteredFiles = files.findAll { needToProcess(it) }
 
@@ -42,19 +51,19 @@ class ScssDiskCompiler extends AbstractScssCompiler {
 //        if (target.exists()) FileUtils.cleanDirectory(target)
     }
 
-    void checkFileAndCompileWithDependents(File sourceFile) {
+    void checkFileAndCompileWithDependents(File sourceFile, Boolean dontCheckLastModified = true) {
         if (needToProcess(sourceFile)) {
             log.debug "Checking file [${sourceFile}] and compile dependent on it files"
 
             //compile changed file
-            compileScssFile(sourceFile)
+            compileScssFile(sourceFile, dontCheckLastModified)
             //compile dependent scss files
             def files = dependentProcessor.getDependentFiles(sourceFile)
             if (files) {
                 log.debug "SCSS: compiling dependent on [${sourceFile.name}] files ${files}"
 
                 files.each { file ->
-                    compileScssFile(file)
+                    compileScssFile(file, dontCheckLastModified)
                 }
             } else {
                 log.debug "SCSS: there is no dependent on [${sourceFile}] files"
@@ -85,27 +94,48 @@ class ScssDiskCompiler extends AbstractScssCompiler {
         }
     }
 
-    private compileScssFile(File sourceFile) {
+    private compileScssFile(File sourceFile, Boolean dontCheckLastModified = false) {
+        log.trace "SCSS: refreshing dependencies for file [${sourceFile}]"
+        dependentProcessor.refreshScssFile(sourceFile)
+
         if (!isTemplate(sourceFile)) {
             //this is not template... this should be compiled
             def targetFiles = getTargetFiles(sourceFile)
 
-            log.debug "SCSS: compiling file ${sourceFile} to ${targetFiles}"
+            if (dontCheckLastModified || isModifiedSinceLastCompile(sourceFile, targetFiles)) {
+                log.debug "SCSS: compiling file ${sourceFile} to ${targetFiles}"
 
-            def css = ScssUtils.compile(sourceFile, scssCompilePaths, config.compass, config)
+                def css = ScssUtils.compile(sourceFile, scssCompilePaths, config.compass, config)
 
-            targetFiles.each { targetFile ->
-                targetFile.parentFile.mkdirs()
-                if (css != null) {
-                    targetFile.write(css)
-                } else {
-                    targetFile.delete()
+                targetFiles.each { targetFile ->
+                    targetFile.parentFile.mkdirs()
+                    if (css != null) {
+                        log.info "SCSS: overwrite ${targetFile}"
+
+                        targetFile.write(css)
+                    } else {
+                        targetFile.delete()
+                    }
                 }
+            } else {
+                log.debug "SCSS: skip compiling file ${relativeToProjectPath(sourceFile)} to ${relativeToProjectPath(targetFiles)}: up to date"
             }
         }
+    }
 
-        log.trace "SCSS: refreshing dependencies for file [${sourceFile}]"
-        dependentProcessor.refreshScssFile(sourceFile)
+    /**
+     * @return true if {@code targetFiles} was modified earlier than {@code sourceFile} and its dependencies
+     */
+    private isModifiedSinceLastCompile(File sourceFile, List<File> targetFiles) {
+        def minModifiedDate = (dependentProcessor.getDependsOnFiles(sourceFile) + sourceFile)
+                .max {a, b -> a.lastModified() <=> b.lastModified()}
+                .lastModified()
+
+        for (def targetFile in targetFiles) {
+            if (!targetFile.exists() || minModifiedDate > targetFile.lastModified()) return true
+        }
+
+        return false
     }
 
     private getTargetFoldersForFile(File file) {

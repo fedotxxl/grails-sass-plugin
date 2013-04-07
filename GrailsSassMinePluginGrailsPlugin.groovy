@@ -1,12 +1,14 @@
+import groovy.util.logging.Slf4j
 import org.springframework.core.io.FileSystemResource
 import ru.gramant.ScssCompilerPluginUtils
 import ru.gramant.ScssConfigHolder
 import ru.gramant.ScssDiskCompiler
 import ru.gramant.ScssResourcesCompiler
 
+@Slf4j
 class GrailsSassMinePluginGrailsPlugin {
     // the plugin version
-    def version = "0.1.7.20"
+    def version = "0.1.7.21"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // resources that are excluded from plugin packaging
@@ -59,6 +61,8 @@ Brief summary/description of the plugin.
 
                 //similar to https://github.com/bobbywarner/grails-ruby/blob/master/RubyGrailsPlugin.groovy
                 if (ScssCompilerPluginUtils.isScssFile(file)) {
+                    log.info "SCSS: change detected - ${file}"
+
                     if (resourcesMode) {
                         resourcesCompiler.checkFileAndCompileDependents(file)
                     } else {
@@ -67,7 +71,7 @@ Brief summary/description of the plugin.
                 }
             }
         } catch (Throwable e) {
-            println "SCSS: exception on processing change event: ${event}"
+            println "SCSS: exception on processing change event: ${event} - ${e}"
             e.printStackTrace()
         }
     }
@@ -119,10 +123,13 @@ Brief summary/description of the plugin.
                     diskCompiler = new ScssDiskCompiler(application)
                     //resources mode is disabled... may be we should compile scss
                     if (config.disk.compileOnAnyCommand || shouldBeCompiled) {
+                        def files = getWatchedFiles(plugin)
+                        //refreshing dependencies map
+                        diskCompiler.calculateDependentFiles(files)
                         //may be we should clear target folder?
                         if (config.disk.clearTargetFolder) diskCompiler.clearTargetFolder()
                         //let's compile scss files...
-                        diskCompiler.compileScssFiles(getWatchedFiles(plugin))
+                        diskCompiler.compileScssFiles(files)
                     }
 
                     loaded = false
