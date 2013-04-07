@@ -118,7 +118,7 @@ class ScssDiskCompiler extends AbstractScssCompiler {
                     }
                 }
             } else {
-                log.debug "SCSS: skip compiling file ${path(sourceFile)} to ${paths(targetFiles)}: up to date"
+                log.info "SCSS: skip compiling file ${path(sourceFile)} to ${paths(targetFiles)}: up to date"
             }
         }
     }

@@ -20,7 +20,7 @@ class ScssUtils {
         try {
             def fullLoadPaths = [scssFile.parent] + loadPaths
 
-            log.info "SCSS: Compiling scss file [${scssFile}], syntax ${syntax}, style ${style}"
+            log.debug "SCSS: Compiling scss file [${scssFile}], syntax ${syntax}, style ${style}"
             log.debug "SCSS: loadPaths ${fullLoadPaths}"
 
             if (!jruby) {
