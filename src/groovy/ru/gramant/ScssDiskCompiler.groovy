@@ -1,9 +1,9 @@
 package ru.gramant
-
 import groovy.util.logging.Slf4j
 import org.apache.commons.io.FilenameUtils
 import org.codehaus.groovy.grails.commons.GrailsApplication
-import static ru.gramant.ScssCompilerPluginUtils.relativeToProjectPath
+import static ru.gramant.ScssCompilerPluginUtils.path
+import static ru.gramant.ScssCompilerPluginUtils.paths
 
 @Slf4j
 class ScssDiskCompiler extends AbstractScssCompiler {
@@ -28,7 +28,7 @@ class ScssDiskCompiler extends AbstractScssCompiler {
     }
 
     void calculateDependentFiles(Collection<File> files) {
-        log.debug "SCSS: refreshing dependencies for files ${files}"
+        log.debug "SCSS: refreshing dependencies for files ${paths(files)}"
 
         files.each {
             dependentProcessor.refreshScssFile(it)
@@ -53,20 +53,20 @@ class ScssDiskCompiler extends AbstractScssCompiler {
 
     void checkFileAndCompileWithDependents(File sourceFile, Boolean dontCheckLastModified = true) {
         if (needToProcess(sourceFile)) {
-            log.debug "Checking file [${sourceFile}] and compile dependent on it files"
+            log.debug "Checking file [${path(sourceFile)}] and compile dependent on it files"
 
             //compile changed file
             compileScssFile(sourceFile, dontCheckLastModified)
             //compile dependent scss files
             def files = dependentProcessor.getDependentFiles(sourceFile)
             if (files) {
-                log.debug "SCSS: compiling dependent on [${sourceFile.name}] files ${files}"
+                log.debug "SCSS: compiling dependent on [${path(sourceFile)}] files ${paths(files)}"
 
                 files.each { file ->
                     compileScssFile(file, dontCheckLastModified)
                 }
             } else {
-                log.debug "SCSS: there is no dependent on [${sourceFile}] files"
+                log.debug "SCSS: there is no dependent on [${path(sourceFile)}] files"
             }
         }
     }
@@ -89,13 +89,13 @@ class ScssDiskCompiler extends AbstractScssCompiler {
         if (isProjectOrInlinePluginFile(file)) {
             return getTargetFoldersForFile(file) as boolean
         } else {
-            log.trace("SCSS: file ${file} will not be processed")
+            log.trace("SCSS: file ${path(file)} will not be processed")
             return false //don't compile external files
         }
     }
 
     private compileScssFile(File sourceFile, Boolean dontCheckLastModified = false) {
-        log.trace "SCSS: refreshing dependencies for file [${sourceFile}]"
+        log.trace "SCSS: refreshing dependencies for file [${path(sourceFile)}]"
         dependentProcessor.refreshScssFile(sourceFile)
 
         if (!isTemplate(sourceFile)) {
@@ -103,14 +103,14 @@ class ScssDiskCompiler extends AbstractScssCompiler {
             def targetFiles = getTargetFiles(sourceFile)
 
             if (dontCheckLastModified || isModifiedSinceLastCompile(sourceFile, targetFiles)) {
-                log.debug "SCSS: compiling file ${sourceFile} to ${targetFiles}"
+                log.debug "SCSS: compiling file ${path(sourceFile)} to ${paths(targetFiles)}"
 
                 def css = ScssUtils.compile(sourceFile, scssCompilePaths, ScssConfigHolder.config.compass, ScssConfigHolder.config)
 
                 targetFiles.each { targetFile ->
                     targetFile.parentFile.mkdirs()
                     if (css != null) {
-                        log.info "SCSS: overwrite ${targetFile}"
+                        log.info "SCSS: overwrite ${path(targetFile)}"
 
                         targetFile.write(css)
                     } else {
@@ -118,7 +118,7 @@ class ScssDiskCompiler extends AbstractScssCompiler {
                     }
                 }
             } else {
-                log.debug "SCSS: skip compiling file ${relativeToProjectPath(sourceFile)} to ${relativeToProjectPath(targetFiles)}: up to date"
+                log.debug "SCSS: skip compiling file ${path(sourceFile)} to ${paths(targetFiles)}: up to date"
             }
         }
     }

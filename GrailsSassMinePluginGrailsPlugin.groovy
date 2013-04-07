@@ -4,6 +4,7 @@ import ru.gramant.ScssCompilerPluginUtils as PluginUtils
 import ru.gramant.ScssConfigHolder
 import ru.gramant.ScssDiskCompiler
 import ru.gramant.ScssResourcesCompiler
+import static ru.gramant.ScssCompilerPluginUtils.path
 
 @Slf4j
 class GrailsSassMinePluginGrailsPlugin {
@@ -60,7 +61,7 @@ Brief summary/description of the plugin.
 
                 //similar to https://github.com/bobbywarner/grails-ruby/blob/master/RubyGrailsPlugin.groovy
                 if (PluginUtils.isScssFile(file)) {
-                    log.info "SCSS: change detected - ${file}"
+                    log.info "SCSS: change detected - ${path(file)}"
 
                     if (PluginUtils.isResourcesMode()) {
                         resourcesCompiler.checkFileAndCompileDependents(file)

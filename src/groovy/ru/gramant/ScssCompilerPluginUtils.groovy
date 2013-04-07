@@ -40,7 +40,7 @@ class ScssCompilerPluginUtils {
         def basePath = FilenameUtils.separatorsToUnix(FilenameUtils.normalize(System.properties['base.dir']))
         def filePath = FilenameUtils.separatorsToUnix(FilenameUtils.normalize(file.canonicalPath))
 
-        if (filePath.startsWith(basePath)) {
+        if (basePath && filePath.startsWith(basePath)) {
             return "/" + filePath.substring(basePath.length()+1)
         } else {
             return filePath
@@ -51,5 +51,20 @@ class ScssCompilerPluginUtils {
         return files.collect { relativeToProjectPath(it) }
     }
 
+    static String path(File file) {
+        if (ScssConfigHolder.config.relativePaths) {
+            return relativeToProjectPath(file)
+        } else {
+            return file.canonicalPath
+        }
+    }
+
+    static String paths(Collection<File> files) {
+        if (ScssConfigHolder.config.relativePaths) {
+            return relativeToProjectPath(files)
+        } else {
+            return files.collect {it.canonicalPath}
+        }
+    }
 }
 

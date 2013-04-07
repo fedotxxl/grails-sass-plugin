@@ -10,6 +10,8 @@ import org.grails.plugin.resource.ResourceProcessor
 import org.grails.plugin.resource.ResourceTagLib
 import org.grails.plugin.resource.CSSPreprocessorResourceMapper
 import org.grails.plugin.resource.CSSRewriterResourceMapper
+import static ru.gramant.ScssCompilerPluginUtils.path
+import static ru.gramant.ScssCompilerPluginUtils.paths
 
 @Slf4j
 class ScssResourcesCompiler extends AbstractScssCompiler {
@@ -22,7 +24,7 @@ class ScssResourcesCompiler extends AbstractScssCompiler {
     }
 
     void calculateDependentFiles(List<File> files) {
-        log.debug "SCSS: refreshing dependencies for files ${files}"
+        log.debug "SCSS: refreshing dependencies for files ${paths(files)}"
 
         files.each {
             dependentProcessor.refreshScssFile(it)
@@ -30,20 +32,20 @@ class ScssResourcesCompiler extends AbstractScssCompiler {
     }
 
     void checkFileAndCompileDependents(File sourceFile) {
-        log.debug "Checking file [${sourceFile}] and compile dependent on it files"
+        log.debug "Checking file [${path(sourceFile)}] and compile dependent on it files"
 
         //update dependencies for changed file
         dependentProcessor.refreshScssFile(sourceFile)
 
         def files = dependentProcessor.getDependentFiles(sourceFile)
         if (files) {
-            log.debug "SCSS: touching dependent on [${sourceFile.name}] files ${files} to be recompiled by Resources plugin"
+            log.debug "SCSS: touching dependent on [${path(sourceFile)}] files ${paths(files)} to be recompiled by Resources plugin"
 
             files.each { file ->
                 touchFileToTriggerResourcePlugin(file)
             }
         } else {
-            log.debug "SCSS: there is no dependent on [${sourceFile}] files"
+            log.debug "SCSS: there is no dependent on [${path(sourceFile)}] files"
         }
     }
 

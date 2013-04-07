@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import ru.gramant.ScssCompilerPluginUtils
 import ru.gramant.ScssConfigHolder
 import ru.gramant.ScssUtils
+import static ru.gramant.ScssCompilerPluginUtils.path
 
 class ScssResourceMapper {
 
@@ -28,13 +29,13 @@ class ScssResourceMapper {
                 if (resource.originalUrl && ScssCompilerPluginUtils.isScssFile(scssFile)) {
                     def cssFile = new File("${scssFile.absolutePath}.css")
 
-                    log.debug "SCSS: Compiling SCSS file [${scssFile}] into [${cssFile}]"
+                    log.debug "SCSS: Compiling SCSS file [${path(scssFile)}] into [${path(cssFile)}]"
 
                     def realFile = getRealFile(resource.originalUrl)
                     def compiled = getFromCache(realFile)
 
                     if (compiled) {
-                        log.debug "SCSS: for file ${scssFile} use data from cache"
+                        log.debug "SCSS: for file ${path(scssFile)} use data from cache"
                     } else {
                         def paths = getScssCompilePaths()
                         compiled = ScssUtils.compile(realFile, paths, ScssConfigHolder.config.compass, ScssConfigHolder.config)
@@ -56,11 +57,11 @@ class ScssResourceMapper {
                         processCompilationFailure(resource)
                     }
                 } else {
-                    log.debug("SCSS: skipped file [${scssFile}]")
+                    log.debug("SCSS: skipped file [${path(scssFile)}]")
                 }
             } catch (e) {
                 processCompilationFailure(resource)
-                log.error("SCSS: Exception while parsing file [${resource.processedFile}]", e)
+                log.error("SCSS: Exception while parsing file [${path(resource.processedFile)}]", e)
             }
         }
     }
