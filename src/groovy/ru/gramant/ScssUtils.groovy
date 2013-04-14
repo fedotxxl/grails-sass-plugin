@@ -40,13 +40,20 @@ class ScssUtils {
             params.debug_info = (debugInfo) ? true : false
             params.line_comments = (lineComments) ? true : false
             params.scss_folder = scssFile.parent
+            params.file_path = FilenameUtils.separatorsToUnix(scssFile.canonicalPath)
 
             //call a method defined in the ruby source
             jruby.put("template", scssFile.text);
             jruby.put("params", params);
             jruby.put("load_paths", fullLoadPaths)
 
-            return (String) jruby.eval("compileSingleScss(\$template, \$params, \$load_paths)");
+            def answer = (Map) jruby.eval("compileSingleScss(\$template, \$params, \$load_paths)");
+            if (answer.result) {
+                return answer.scss
+            } else {
+                log.warn("SCSS: failed to compile scss file [${scssFile}]: ${answer.short_error}")
+                return answer.error
+            }
         } catch (RaiseException re) {
             log.error("SCSS: Exception on compiling scss template by path [${scssFile}]")
             return null

@@ -10,7 +10,20 @@ def compileSingleScss(template, params, load_paths)
   convertedParams[:line_comments] = params['line_comments']
   convertedParams[:style] = params['style'].to_sym
   convertedParams[:syntax] = params['syntax'].to_sym
+  convertedParams[:filename] = params['file_path']
 
-  sass = Sass::Engine.new(template, convertedParams)
-  sass.render
+  answer = Hash.new
+
+  begin
+    sass = Sass::Engine.new(template, convertedParams)
+    answer['scss'] = sass.render
+    answer['result'] = true
+  rescue Sass::SyntaxError => e
+    #e.sass_template = template
+    answer['error'] = Sass::SyntaxError.exception_to_css(e, :full_exception => true)
+    answer['short_error'] = e.sass_backtrace_str
+    answer['result'] = false
+  end
+
+  return answer
 end
