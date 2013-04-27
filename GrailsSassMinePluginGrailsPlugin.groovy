@@ -44,6 +44,8 @@ Brief summary/description of the plugin.
         //'disk.folders'(type: Map, defaultValue: ['scss': 'scss_css']) - can't define it because of PC bug http://jira.grails.org/browse/GPPLATFORMCORE-44
         'disk.clearTargetFolder'(type: Boolean, defaultValue: true)
         'disk.modules'(type: List, defaultValue: [])
+        'disk.checkLastModifiedBeforeCompile'(type: Boolean, defaultValue: true)
+        'disk.asyncStartup'(type: Boolean, defaultValue: false)
         'resources.exceptionOnFailedCompilation'(type: Boolean, defaultValue: false)
         'resources.modules.folder.source'(type: String, defaultValue: '')
         'syntax'(type: String, defaultValue: 'byFileDimension')
@@ -121,13 +123,14 @@ Brief summary/description of the plugin.
 
                     //resources mode is disabled... may be we should compile scss
                     if (ScssConfigHolder.config.disk.compileOnAnyCommand || shouldBeCompiled) {
-                        def files = getWatchedFiles(plugin)
-                        //refreshing dependencies map
-                        diskCompiler.calculateDependentFiles(files)
-                        //may be we should clear target folder?
-                        if (ScssConfigHolder.config.disk.clearTargetFolder) diskCompiler.clearTargetFolder()
-                        //let's compile scss files...
-                        diskCompiler.compileScssFiles(files)
+                        if (ScssConfigHolder.config.disk.asyncStartup) {
+                            Thread.start {
+                                println "SCSS: async startup compile"
+                                compileWatchedScssFilesToDisk(plugin)
+                            }
+                        } else {
+                            compileWatchedScssFilesToDisk(plugin)
+                        }
                     }
 
                     loaded = false
@@ -136,6 +139,20 @@ Brief summary/description of the plugin.
         } catch (Throwable e) {
             println "SCSS: exception on plugin startup - " + e
             e.printStackTrace()
+        }
+    }
+
+    private compileWatchedScssFilesToDisk(plugin) {
+        try {
+            def files = getWatchedFiles(plugin)
+            //refreshing dependencies map
+            diskCompiler.calculateDependentFiles(files)
+            //may be we should clear target folder?
+            if (ScssConfigHolder.config.disk.clearTargetFolder) diskCompiler.clearTargetFolder()
+            //let's compile scss files...
+            diskCompiler.compileScssFiles(files, ScssConfigHolder.config.disk.checkLastModifiedBeforeCompile)
+        } catch (e) {
+            println "SCSS: exception on compiling scss files on project startup - " + e
         }
     }
 

@@ -35,11 +35,11 @@ class ScssDiskCompiler extends AbstractScssCompiler {
         }
     }
 
-    void compileScssFiles(Collection<File> files) {
+    void compileScssFiles(Collection<File> files, Boolean checkLastModifiedBeforeCompile = false) {
         def filteredFiles = files.findAll { needToProcess(it) }
 
         filteredFiles.each { file ->
-            compileScssFile(file)
+            compileScssFile(file, checkLastModifiedBeforeCompile)
         }
     }
 
@@ -51,19 +51,19 @@ class ScssDiskCompiler extends AbstractScssCompiler {
 //        if (target.exists()) FileUtils.cleanDirectory(target)
     }
 
-    void checkFileAndCompileWithDependents(File sourceFile, Boolean dontCheckLastModified = true) {
+    void checkFileAndCompileWithDependents(File sourceFile, Boolean checkLastModifiedBeforeCompile = false) {
         if (needToProcess(sourceFile)) {
             log.debug "Checking file [${path(sourceFile)}] and compile dependent on it files"
 
             //compile changed file
-            compileScssFile(sourceFile, dontCheckLastModified)
+            compileScssFile(sourceFile, checkLastModifiedBeforeCompile)
             //compile dependent scss files
             def files = dependentProcessor.getDependentFiles(sourceFile)
             if (files) {
                 log.debug "SCSS: compiling dependent on [${path(sourceFile)}] files ${paths(files)}"
 
                 files.each { file ->
-                    compileScssFile(file, dontCheckLastModified)
+                    compileScssFile(file, checkLastModifiedBeforeCompile)
                 }
             } else {
                 log.debug "SCSS: there is no dependent on [${path(sourceFile)}] files"
@@ -94,7 +94,7 @@ class ScssDiskCompiler extends AbstractScssCompiler {
         }
     }
 
-    private compileScssFile(File sourceFile, Boolean dontCheckLastModified = false) {
+    private compileScssFile(File sourceFile, Boolean checkLastModifiedBeforeCompile = false) {
         log.trace "SCSS: refreshing dependencies for file [${path(sourceFile)}]"
         dependentProcessor.refreshScssFile(sourceFile)
 
@@ -102,10 +102,10 @@ class ScssDiskCompiler extends AbstractScssCompiler {
             //this is not template... this should be compiled
             def targetFiles = getTargetFiles(sourceFile)
 
-            if (dontCheckLastModified || isModifiedSinceLastCompile(sourceFile, targetFiles)) {
+            if (!checkLastModifiedBeforeCompile || isModifiedSinceLastCompile(sourceFile, targetFiles)) {
                 log.debug "SCSS: compiling file ${path(sourceFile)} to ${paths(targetFiles)}"
 
-                def css = ScssUtils.compile(sourceFile, scssCompilePaths, ScssConfigHolder.config.compass, ScssConfigHolder.config)
+                def css = ScssUtils.instance.compile(sourceFile, scssCompilePaths, ScssConfigHolder.config.compass, ScssConfigHolder.config)
 
                 targetFiles.each { targetFile ->
                     targetFile.parentFile.mkdirs()

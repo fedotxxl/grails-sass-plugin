@@ -38,7 +38,7 @@ class ScssResourceMapper {
                         log.debug "SCSS: for file ${path(scssFile)} use data from cache"
                     } else {
                         def paths = getScssCompilePaths()
-                        compiled = ScssUtils.compile(realFile, paths, ScssConfigHolder.config.compass, ScssConfigHolder.config)
+                        compiled = ScssUtils.instance.compile(realFile, paths, ScssConfigHolder.config.compass, ScssConfigHolder.config)
                     }
 
                     if (compiled != null) {
