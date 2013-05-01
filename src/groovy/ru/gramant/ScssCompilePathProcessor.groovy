@@ -37,7 +37,6 @@ class ScssCompilePathProcessor {
     void addFolderToCompilePath(File file) {
         if (!isShouldBeExcluded(file)) {
             compilePath << file.canonicalPath
-
         }
     }
 
