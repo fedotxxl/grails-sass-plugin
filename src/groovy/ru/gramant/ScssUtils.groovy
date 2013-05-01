@@ -124,7 +124,7 @@ class ScssUtils {
                 def paths = extractFileNames(scssPath)
                 paths.each { path ->
                     def e = FilenameUtils.getExtension(path)
-                    if (path && (!e || (e == 'scss' || e == 'sass')) && !path.startsWith("http://")) {
+                    if (path && (!e || !e.equalsIgnoreCase("css")) && !path.startsWith("http://")) {
                         answer << FilenameUtils.getBaseName(path)
                     }
                 }
