@@ -3,6 +3,7 @@ import org.grails.plugin.resource.ResourceMeta
 import org.grails.plugin.resource.mapper.MapperPhase
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import ru.gramant.ScssCompilePathProcessor
 import ru.gramant.ScssCompilerPluginUtils
 import ru.gramant.ScssConfigHolder
 import ru.gramant.ScssUtils
@@ -37,8 +38,7 @@ class ScssResourceMapper {
                     if (compiled) {
                         log.debug "SCSS: for file ${path(scssFile)} use data from cache"
                     } else {
-                        def paths = getScssCompilePaths()
-                        compiled = ScssUtils.instance.compile(realFile, paths, ScssConfigHolder.config.compass, ScssConfigHolder.config)
+                        compiled = ScssUtils.instance.compile(realFile, ScssCompilePathProcessor.instance.compilePath, ScssConfigHolder.config.compass, ScssConfigHolder.config)
                     }
 
                     if (compiled != null) {
@@ -76,20 +76,6 @@ class ScssResourceMapper {
         def data = cache[file.canonicalPath]
         if (data) {
             if (file.lastModified() == data.lastModified) answer = data.css
-        }
-
-        return answer
-    }
-
-    List<String> getScssCompilePaths() {
-        def answer = []
-        def path = ScssConfigHolder.config.resources.modules.folder.source
-
-        if (path) {
-            pluginManager.userPlugins.each { plugin ->
-                def file = getRealFile(path, plugin)
-                if (file?.exists()) answer << file.canonicalPath
-            }
         }
 
         return answer

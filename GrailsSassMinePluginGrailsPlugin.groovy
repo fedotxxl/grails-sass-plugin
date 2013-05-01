@@ -1,15 +1,20 @@
-import groovy.util.logging.Slf4j
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.core.io.FileSystemResource
+import ru.gramant.ScssCompilePathProcessor
 import ru.gramant.ScssCompilerPluginUtils as PluginUtils
 import ru.gramant.ScssConfigHolder
 import ru.gramant.ScssDiskCompiler
 import ru.gramant.ScssResourcesCompiler
+
 import static ru.gramant.ScssCompilerPluginUtils.path
 
-@Slf4j
 class GrailsSassMinePluginGrailsPlugin {
+
+    private static final Logger LOG = LoggerFactory.getLogger("ru.grails.GrailsSassMinePluginGrailsPlugin")
+
     // the plugin version
-    def version = "0.1.7.22"
+    def version = "0.1.7.23"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // resources that are excluded from plugin packaging
@@ -43,8 +48,7 @@ Brief summary/description of the plugin.
         'disk.compileOnAnyCommand'(type: Boolean, defaultValue: true)
         //'disk.folders'(type: Map, defaultValue: ['scss': 'scss_css']) - can't define it because of PC bug http://jira.grails.org/browse/GPPLATFORMCORE-44
         'disk.clearTargetFolder'(type: Boolean, defaultValue: true)
-        'disk.modules'(type: List, defaultValue: [])
-        'disk.checkLastModifiedBeforeCompile'(type: Boolean, defaultValue: true)
+        'disk.checkLastModifiedBeforeCompile'(type: Boolean, defaultValue: false)
         'disk.asyncStartup'(type: Boolean, defaultValue: false)
         'resources.exceptionOnFailedCompilation'(type: Boolean, defaultValue: false)
         'resources.modules.folder.source'(type: String, defaultValue: '')
@@ -54,6 +58,7 @@ Brief summary/description of the plugin.
         'debugInfo'(type: Boolean, defaultValue: false)
         'compass'(type: Boolean, defaultValue: false)
         'relativePaths'(type: Boolean, defaultValue: true)
+        'compilePathExclude'(type: List, defaultValue: [])
     }
 
     def onChange = { event ->
@@ -63,8 +68,12 @@ Brief summary/description of the plugin.
 
                 //similar to https://github.com/bobbywarner/grails-ruby/blob/master/RubyGrailsPlugin.groovy
                 if (PluginUtils.isScssFile(file)) {
-                    log.info "SCSS: change detected - ${path(file)}"
+                    LOG.info "SCSS: change detected - ${path(file)}"
 
+                    //update compile path
+                    ScssCompilePathProcessor.instance.addFolderToCompilePath(file.parentFile)
+
+                    //recompile scss file
                     if (PluginUtils.isResourcesMode()) {
                         resourcesCompiler.checkFileAndCompileDependents(file)
                     } else {
@@ -73,12 +82,15 @@ Brief summary/description of the plugin.
                 }
             }
         } catch (Throwable e) {
-            println "SCSS: exception on processing change event: ${event} - ${e}"
-            e.printStackTrace()
+            LOG.error("SCSS: exception on processing change event: ${event} - ${e}", e)
         }
     }
 
     def onConfigChange = { event ->
+        //update compile path
+        refreshScssCompilePaths(plugin)
+
+        //update compilers
         if (PluginUtils.isResourcesMode()) {
             resourcesCompiler?.refreshConfig()
         } else {
@@ -89,11 +101,11 @@ Brief summary/description of the plugin.
     def doWithSpring = {
         try {
             if (loaded) {
-                ScssConfigHolder.readPluginsConfig(application.config)
+                initConfigHolderAndCompilePathProcessor(application, plugin)
                 resourcesCompiler = new ScssResourcesCompiler(application)
 
                 if (PluginUtils.isResourcesMode()) {
-                    println "SCSS: compiler in resource mode"
+                    LOG.info "SCSS: compiler in resource mode"
 
                     //refreshing dependencies map
                     resourcesCompiler.calculateDependentFiles(getWatchedFiles(plugin))
@@ -104,8 +116,7 @@ Brief summary/description of the plugin.
                 }
             }
         } catch (Throwable e) {
-            println "SCSS: exception on plugin startup - " + e
-            e.printStackTrace()
+            LOG.error("SCSS: exception on plugin startup - " + e, e)
         }
     }
 
@@ -115,17 +126,17 @@ Brief summary/description of the plugin.
     def doWithWebDescriptor = {
         try {
             if (loaded) {
-                ScssConfigHolder.readPluginsConfig(application.config)
+                initConfigHolderAndCompilePathProcessor(application, plugin)
                 diskCompiler = new ScssDiskCompiler(application)
 
                 if (PluginUtils.isDiskMode()) {
-                    println "SCSS: compile in disk mode"
+                    LOG.info "SCSS: compile in disk mode"
 
                     //resources mode is disabled... may be we should compile scss
                     if (ScssConfigHolder.config.disk.compileOnAnyCommand || shouldBeCompiled) {
                         if (ScssConfigHolder.config.disk.asyncStartup) {
                             Thread.start {
-                                println "SCSS: async startup compile"
+                                LOG.info "SCSS: async startup compile"
                                 compileWatchedScssFilesToDisk(plugin)
                             }
                         } else {
@@ -137,8 +148,7 @@ Brief summary/description of the plugin.
                 }
             }
         } catch (Throwable e) {
-            println "SCSS: exception on plugin startup - " + e
-            e.printStackTrace()
+            LOG.error("SCSS: exception on plugin startup - " + e, e)
         }
     }
 
@@ -152,11 +162,22 @@ Brief summary/description of the plugin.
             //let's compile scss files...
             diskCompiler.compileScssFiles(files, ScssConfigHolder.config.disk.checkLastModifiedBeforeCompile)
         } catch (e) {
-            println "SCSS: exception on compiling scss files on project startup - " + e
+            LOG.error("SCSS: exception on compiling scss files on project startup - " + e, e)
         }
     }
 
     private List<File> getWatchedFiles(plugin) {
         return plugin.watchedResources.collect { it.file }
     }
+
+    private initConfigHolderAndCompilePathProcessor(application, plugin) {
+        ScssConfigHolder.readPluginsConfig(application.config)
+        ScssCompilePathProcessor.instance.recalculateCompilePath(getWatchedFiles(plugin))
+    }
+
+    private refreshScssCompilePaths(plugin) {
+        ScssCompilePathProcessor.instance.refreshConfig()
+        ScssCompilePathProcessor.instance.recalculateCompilePath(getWatchedFiles(plugin))
+    }
+
 }

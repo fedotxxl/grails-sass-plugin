@@ -1,7 +1,11 @@
 package ru.gramant
 import groovy.util.logging.Slf4j
+import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
+import org.apache.commons.io.filefilter.IOFileFilter
 import org.codehaus.groovy.grails.commons.GrailsApplication
+import org.codehaus.groovy.grails.plugins.GrailsPluginUtils
+
 import static ru.gramant.ScssCompilerPluginUtils.path
 import static ru.gramant.ScssCompilerPluginUtils.paths
 
@@ -11,7 +15,7 @@ class ScssDiskCompiler extends AbstractScssCompiler {
 //    private GrailsApplication application
 //    private ConfigObject config
     private ScssDependentProcessor dependentProcessor
-    private Map folders
+    private Map<String, List<String>> folders
 
     ScssDiskCompiler(GrailsApplication application) {
         super(application)
@@ -44,16 +48,43 @@ class ScssDiskCompiler extends AbstractScssCompiler {
     }
 
     void clearTargetFolder() {
-//        def target = new File('.', targetFolder)
-//
-//        log.debug "SCSS: cleaning folder [${target.canonicalPath}]"
-//
-//        if (target.exists()) FileUtils.cleanDirectory(target)
+        def targetFolders = folders.values().flatten() as Set
+        def parentFolders = GrailsPluginUtils.pluginBuildSettings.getInlinePluginDirectories().collect {it.file} + projectFolder
+
+        targetFolders.each { folder ->
+            parentFolders.each { parentFolder ->
+                def file = new File(folder, parentFolder)
+                if (file.exists() && file.isDirectory()) clearTargetFolder(file)
+            }
+        }
+    }
+
+    private void clearTargetFolder(File file) {
+        //select files to delete
+        def files = FileUtils.listFiles(file, new IOFileFilter() {
+            @Override
+            boolean accept(File f) {
+                return isScssCompiledFile(f)
+            }
+
+            @Override
+            boolean accept(File dir, String name) {
+                return isScssCompiledFile(new File(name, dir))
+            }
+        }, null)
+
+        log.info("SCSS: clearing target folder: ${path(file)} - ${files.size()} files to delete")
+
+        //delete selected files
+        files.each { fileToDelete ->
+            log.trace("SCSS: deleting file ${path(fileToDelete)}")
+            fileToDelete.delete()
+        }
     }
 
     void checkFileAndCompileWithDependents(File sourceFile, Boolean checkLastModifiedBeforeCompile = false) {
         if (needToProcess(sourceFile)) {
-            log.debug "Checking file [${path(sourceFile)}] and compile dependent on it files"
+            log.debug "SCSS: Checking file [${path(sourceFile)}] and compile dependent on it files"
 
             //compile changed file
             compileScssFile(sourceFile, checkLastModifiedBeforeCompile)
@@ -105,7 +136,7 @@ class ScssDiskCompiler extends AbstractScssCompiler {
             if (!checkLastModifiedBeforeCompile || isModifiedSinceLastCompile(sourceFile, targetFiles)) {
                 log.debug "SCSS: compiling file ${path(sourceFile)} to ${paths(targetFiles)}"
 
-                def css = ScssUtils.instance.compile(sourceFile, scssCompilePaths, ScssConfigHolder.config.compass, ScssConfigHolder.config)
+                def css = ScssUtils.instance.compile(sourceFile, ScssCompilePathProcessor.instance.compilePath, ScssConfigHolder.config.compass, ScssConfigHolder.config)
 
                 targetFiles.each { targetFile ->
                     targetFile.parentFile.mkdirs()
@@ -188,5 +219,10 @@ class ScssDiskCompiler extends AbstractScssCompiler {
         def configValue = ScssConfigHolder.config.disk.folders
 
         return (configValue instanceof Map) ? configValue : defaultValue
+    }
+
+    private isScssCompiledFile(File file) {
+        def fileName = file.name.toLowerCase()
+        return fileName.endsWith(".scss.css") || fileName.endsWith(".sass.css")
     }
 }

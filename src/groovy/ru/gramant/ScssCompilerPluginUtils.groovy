@@ -70,11 +70,26 @@ class ScssCompilerPluginUtils {
         }
     }
 
-    static String paths(Collection<File> files) {
+    static String path(String path) {
+        return path(new File(path))
+    }
+
+    static String paths(Collection filesOrPaths) {
+
+        def files = filesOrPaths.collect{
+            if (it instanceof String) {
+                return new File(it)
+            } else if (it instanceof File) {
+                return it
+            } else {
+                return null
+            }
+        }
+
         if (ScssConfigHolder.config.relativePaths) {
             return relativeToProjectPath(files)
         } else {
-            return files.collect {it.canonicalPath}
+            return files.collect {it?.canonicalPath}
         }
     }
 }

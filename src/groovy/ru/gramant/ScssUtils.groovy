@@ -18,7 +18,7 @@ class ScssUtils {
     private ScriptEngine jruby = null
     private Boolean compass = false
 
-    String compile(File scssFile, List loadPaths, Boolean compass, String syntax, String style, Boolean debugInfo, Boolean lineComments) {
+    String compile(File scssFile, Collection loadPaths, Boolean compass, String syntax, String style, Boolean debugInfo, Boolean lineComments) {
         try {
             def jruby = getJruby(compass)
             def fullLoadPaths = [scssFile.parent] + loadPaths
@@ -55,7 +55,7 @@ class ScssUtils {
         }
     }
 
-    String compile(File scssFile, List paths, Boolean compass = false, Map config = [:]) {
+    String compile(File scssFile, Collection paths, Boolean compass = false, Map config = [:]) {
         return compile(
                 scssFile,
                 paths,

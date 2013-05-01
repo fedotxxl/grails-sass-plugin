@@ -3,7 +3,6 @@
  * Copyright (c) 2012 Cybervision. All rights reserved.
  */
 package ru.gramant
-
 import org.apache.commons.io.FileUtils
 import org.codehaus.groovy.grails.commons.GrailsApplication
 import org.codehaus.groovy.grails.plugins.GrailsPluginInfo
@@ -11,7 +10,6 @@ import org.codehaus.groovy.grails.plugins.GrailsPluginUtils
 
 class AbstractScssCompiler {
 
-    protected compilePaths = []
     protected GrailsApplication grailsApplication
     protected File projectFolder
 
@@ -22,26 +20,6 @@ class AbstractScssCompiler {
     }
 
     void refreshConfig() {
-        compilePaths = []
-    }
-
-    List<String> getScssCompilePaths() {
-        if (!compilePaths) {
-            def modules = ScssConfigHolder.config.modules ?: [:]
-
-             modules.each {
-                def plugin = it.key
-                if (plugin) {
-                    def folders = ScssCompilerPluginUtils.toList(it.value)
-                    folders.each { folder ->
-                        def file = getRealFile(folder, plugin)
-                        if (file?.exists()) compilePaths << file.canonicalPath
-                    }
-                }
-            }
-        }
-
-        return compilePaths
     }
 
     File getRealFile(String path, String plugin = null) {
