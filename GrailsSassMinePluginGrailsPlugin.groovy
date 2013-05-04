@@ -14,7 +14,7 @@ class GrailsSassMinePluginGrailsPlugin {
     private static final Logger LOG = LoggerFactory.getLogger("ru.grails.GrailsSassMinePluginGrailsPlugin")
 
     // the plugin version
-    def version = "0.1.7.23"
+    def version = "0.1.7.24"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // resources that are excluded from plugin packaging
@@ -52,8 +52,8 @@ Brief summary/description of the plugin.
         'disk.asyncStartup'(type: Boolean, defaultValue: false)
         'resources.exceptionOnFailedCompilation'(type: Boolean, defaultValue: false)
         'resources.modules.folder.source'(type: String, defaultValue: '')
-        'syntax'(type: String, defaultValue: 'byFileDimension')
-        'style'(type: String, defaultValue: "compact")
+        'syntax'(type: String, defaultValue: 'byFileDimension') //[byFileDimension, sass, scss]
+        'style'(type: String, defaultValue: "compact") //[compact, compressed, nested]
         'lineComments'(type: Boolean, defaultValue: false)
         'debugInfo'(type: Boolean, defaultValue: false)
         'compass'(type: Boolean, defaultValue: false)
