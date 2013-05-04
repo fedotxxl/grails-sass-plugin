@@ -215,7 +215,7 @@ class ScssDiskCompiler extends AbstractScssCompiler {
     }
 
     private getDiskFolders() {
-        def defaultValue = ['scss': 'scss_css']
+        def defaultValue = ['scss': 'css_scss']
         def configValue = ScssConfigHolder.config.disk.folders
 
         return (configValue instanceof Map) ? configValue : defaultValue
