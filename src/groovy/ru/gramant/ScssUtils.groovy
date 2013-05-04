@@ -118,14 +118,19 @@ class ScssUtils {
 
     static Set<String> getDependOnScssNames(String scss) {
         def answer = [] as Set
+
         def scssWithoutComments = removeCommentsFromScss(scss)
         scssWithoutComments.findAll(~(/(?m)(?:^|;| )@import([^;\r]*)/), { m, String scssPath ->
             if (scssPath) {
                 def paths = extractFileNames(scssPath)
                 paths.each { path ->
-                    def e = FilenameUtils.getExtension(path)
-                    if (path && (!e || !e.equalsIgnoreCase("css")) && !path.startsWith("http://")) {
-                        answer << FilenameUtils.getBaseName(path)
+                    def e = FilenameUtils.getExtension(path).toLowerCase()
+                    if (path && (e != "css") && !path.startsWith("http://")) {
+                        if (e == "scss" || e == "sass") {
+                            answer << FilenameUtils.getBaseName(path)
+                        } else {
+                            answer << path
+                        }
                     }
                 }
             }
