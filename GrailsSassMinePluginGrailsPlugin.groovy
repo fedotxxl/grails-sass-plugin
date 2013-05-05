@@ -38,7 +38,7 @@ Brief summary/description of the plugin.
     // URL to the plugin's documentation
     def documentation = "http://grails.org/plugin/grails-sass-mine-plugin"
 
-    Boolean loaded = true
+    Boolean loaded = false
     Boolean shouldBeCompiled = System.getProperty("scss.compile")
     ScssDiskCompiler diskCompiler
     ScssResourcesCompiler resourcesCompiler
@@ -88,7 +88,7 @@ Brief summary/description of the plugin.
 
     def onConfigChange = { event ->
         //update compile path
-        refreshScssCompilePaths(plugin)
+        ScssCompilePathProcessor.instance.refreshConfig()
 
         //update compilers
         if (PluginUtils.isResourcesMode()) {
@@ -100,7 +100,7 @@ Brief summary/description of the plugin.
 
     def doWithSpring = {
         try {
-            if (loaded) {
+            if (!loaded) {
                 initConfigHolderAndCompilePathProcessor(application, plugin)
                 resourcesCompiler = new ScssResourcesCompiler(application)
 
@@ -112,7 +112,7 @@ Brief summary/description of the plugin.
                     //enable resources trigger
                     resourcesCompiler.setupResourcesCompileSettings()
 
-                    loaded = false
+                    loaded = true
                 }
             }
         } catch (Throwable e) {
@@ -125,7 +125,7 @@ Brief summary/description of the plugin.
 
     def doWithWebDescriptor = {
         try {
-            if (loaded) {
+            if (!loaded) {
                 initConfigHolderAndCompilePathProcessor(application, plugin)
                 diskCompiler = new ScssDiskCompiler(application)
 
@@ -144,7 +144,7 @@ Brief summary/description of the plugin.
                         }
                     }
 
-                    loaded = false
+                    loaded = true
                 }
             }
         } catch (Throwable e) {
@@ -172,12 +172,7 @@ Brief summary/description of the plugin.
 
     private initConfigHolderAndCompilePathProcessor(application, plugin) {
         ScssConfigHolder.readPluginsConfig(application.config)
-        ScssCompilePathProcessor.instance.recalculateCompilePath(getWatchedFiles(plugin))
-    }
-
-    private refreshScssCompilePaths(plugin) {
-        ScssCompilePathProcessor.instance.refreshConfig()
-        ScssCompilePathProcessor.instance.recalculateCompilePath(getWatchedFiles(plugin))
+        ScssCompilePathProcessor.instance.init(getWatchedFiles(plugin).collect { it.parentFile })
     }
 
 }
