@@ -5,9 +5,9 @@ h2. Параметры компиляции SASS файлов
 {table}
  *Ключ* | *Значение по-умолчанию* | *Возможные значения* | *Описание*
  syntax | "byFileDimension" | "byFileDimension", "sass", "scss" | Определяет синтакс компилируемых файлов - SASS или SCSS: byFileDimension - по разрешению файла; sass - явно SASS; scss - явно SCSS
- style  | "compact" | "compact", "compact", "nested" |
- lineComments | false | true, false |
- debugInfo | false | true, false |
+ style  | "nested" | "nested", "expanded", "compressed", "compact" | Определяет стиль скомпилированного файла - сжатый, вложенный и т.д. Пожалуйста, ознакомьтесь c [http://sass-lang.com/docs/yardoc/file.SASS_REFERENCE.html#output_style|примерами] из официальной документации
+ lineComments | false | true, false | если true, то добавляет комментарий с файлом и стокой из которых получено итоговое CSS свойство
+ debugInfo | false | true, false | если true, то добавляет в скомпилированный файл информацию, необходимую для [http://stackoverflow.com/questions/9865302/less-sass-debugging-in-chrome-dev-tools-firebug|отладки SASS в браузере]
 {table}
 
 h2. Перекомпиляция SASS файлов
@@ -38,18 +38,16 @@ h4. Конфликты при импорте файлов
 2. Исключить из SASS Load Paths одну из папок, в которой расположен конфликтный файл
 
 h5. Исключение папки из SASS Load Paths
-
-
-Директива "plugin.scssCompiler.modules" позволяет добавить в SASS Load Paths папки из других плагинов. Таким образом настройка
+При необходимости вы можете исключить папку из SASS Load Paths. Для этого добавьте в Config.groovy:
 {code}
-plugin.scssCompiler.modules = ['pluginName': 'scss_path']
+plugin.grailsSassMinePlugin.compilePathExclude = ['/folders', '/to', '/exclude', 'r']
 {code}
-добавит в SASS Load Paths папку /web-app/scss_path из плагина pluginName
-{note}
+Плагин исключит из SASS Load Paths все папки, которые заканчиваются на значения из свойства compilePathExclude.
+В данном примере буду исключены папки '/web-app/scss/folders' (оканчивается на '/folders') и, например, '/web-app/scss/other' (оканчивается на 'r').
 
 h3. Версии фреймворков
 Если вам нужна какая-то конкретная версия SASS или Compass, то используйте соответствующую версию плагина:
 {table}
- *Версия плагин* | *jRuby* | *gem sass* | *gem compass*
+ *Версия плагина* | *jRuby* | *gem sass* | *gem compass*
 0.1 | 0123 | 123 | 123
 {table}
