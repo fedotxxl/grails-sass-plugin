@@ -28,7 +28,7 @@ class ScssUtils {
 
             def params = [:]
             params.syntax = getSyntax(syntax, scssFile)
-            params.style = (style in ['compact', 'compressed', 'nested']) ? syntax : 'compact'
+            params.style = (style in ['compact', 'compressed', 'nested', 'expanded']) ? style : 'nested'
             params.debug_info = (debugInfo) ? true : false
             params.line_comments = (lineComments) ? true : false
             params.scss_folder = scssFile.parent

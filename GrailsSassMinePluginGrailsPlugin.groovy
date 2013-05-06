@@ -53,7 +53,7 @@ Brief summary/description of the plugin.
         'resources.exceptionOnFailedCompilation'(type: Boolean, defaultValue: false)
         'resources.modules.folder.source'(type: String, defaultValue: '')
         'syntax'(type: String, defaultValue: 'byFileDimension') //[byFileDimension, sass, scss]
-        'style'(type: String, defaultValue: "compact") //[compact, compressed, nested]
+        'style'(type: String, defaultValue: "nested") //[compact, compressed, nested, expanded]
         'lineComments'(type: Boolean, defaultValue: false)
         'debugInfo'(type: Boolean, defaultValue: false)
         'compass'(type: Boolean, defaultValue: false)
