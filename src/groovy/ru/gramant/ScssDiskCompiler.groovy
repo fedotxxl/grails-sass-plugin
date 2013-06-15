@@ -54,12 +54,12 @@ class ScssDiskCompiler extends AbstractScssCompiler {
         targetFolders.each { folder ->
             parentFolders.each { parentFolder ->
                 def file = new File(folder, parentFolder)
-                if (file.exists() && file.isDirectory()) clearTargetFolder(file)
+                if (file.exists() && file.isDirectory()) doClearTargetFolder(file)
             }
         }
     }
 
-    private void clearTargetFolder(File file) {
+    private void doClearTargetFolder(File file) {
         //select files to delete
         def files = FileUtils.listFiles(file, new IOFileFilter() {
             @Override
