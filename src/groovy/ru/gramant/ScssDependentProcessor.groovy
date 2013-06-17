@@ -29,8 +29,10 @@ class ScssDependentProcessor {
         def dependentFiles = []
         calculateDependentFiles(file.canonicalPath, dependentFiles)
 
-        //change and return
-        return dependentFiles.collect { new File(it) }
+        //change
+        //sort by last modified to compile last modified files first
+        //and return
+        return dependentFiles.collect { new File(it) }.sort { a, b -> b.lastModified() <=> a.lastModified() }
     }
 
     List<File> getDependsOnFiles(File file) {
