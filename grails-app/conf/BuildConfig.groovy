@@ -19,6 +19,7 @@ grails.project.dependency.resolution = {
 
     dependencies {
         compile "bsf:bsf:2.4.0"
+        compile "io.belov.grails:sass-compass:0.12.2.1"
         runtime "org.jruby:jruby-complete:1.6.8"
         compile "commons-io:commons-io:2.4"
     }
@@ -35,7 +36,10 @@ grails.project.dependency.resolution = {
             export = false
         }
 
+        compile (":resources:1.1.6") {
+            export = false
+        }
+
         compile ":platform-core:1.0.RC5"
-        compile ":resources:1.1.6"
     }
 }

@@ -87,12 +87,11 @@ class ScssUtils {
 
         //process a ruby file
         def rubyFileName = compass ? "compassCompiler.rb" : "scssCompiler.rb"
-        def rubyFile = new ClassPathResource("ruby/" + rubyFileName).file
 
         //configure load_path - https://github.com/jruby/jruby/wiki/RedBridge#wiki-Class_Path_Load_Path
-        System.setProperty("org.jruby.embed.class.path", rubyFile.parent);
+        System.setProperty("org.jruby.embed.class.path", "classpath:ruby");
         def jruby = new ScriptEngineManager().getEngineByName("jruby");
-        jruby.eval(rubyFile.newReader());
+        jruby.eval(new InputStreamReader(new ClassPathResource("ruby/${rubyFileName}").inputStream));
 
         return jruby
     }
