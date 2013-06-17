@@ -14,7 +14,7 @@ class GrailsSassMinePluginGrailsPlugin {
     private static final Logger LOG = LoggerFactory.getLogger("ru.grails.GrailsSassMinePluginGrailsPlugin")
 
     // the plugin version
-    def version = "0.1.7.25"
+    def version = "0.1.7.26"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // resources that are excluded from plugin packaging
@@ -23,6 +23,8 @@ class GrailsSassMinePluginGrailsPlugin {
             "grails-app/conf/UrlMappings.groovy",
             "web-app/*"
     ]
+
+    def scopes = [excludes: 'war'] //http://grails.1312388.n4.nabble.com/How-can-I-get-build-and-run-app-dependencies-but-excluded-from-war-td4645847.html
 
     // TODO Fill in these fields
     def title = "Grails Sass Mine Plugin Plugin" // Headline display name of the plugin
