@@ -19,7 +19,7 @@ grails.project.dependency.resolution = {
 
     dependencies {
         compile "bsf:bsf:2.4.0"
-        compile "io.belov.grails:sass-compass:0.12.2.1"
+        compile "io.belov.grails:sass-compass:0.12.2.3"
         runtime "org.jruby:jruby-complete:1.6.8"
         compile "commons-io:commons-io:2.4"
     }
