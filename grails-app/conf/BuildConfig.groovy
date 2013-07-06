@@ -13,13 +13,14 @@ grails.project.dependency.resolution = {
     }
     log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
     repositories {
+        mavenLocal()
         grailsCentral()
         mavenCentral()
     }
 
     dependencies {
         compile "bsf:bsf:2.4.0"
-        compile "io.belov.grails:sass-compass:0.12.2.3"
+        compile "io.belov.grails:sass-compass:0.12.2.2.7"
         runtime "org.jruby:jruby-complete:1.6.8"
         compile "commons-io:commons-io:2.4"
     }

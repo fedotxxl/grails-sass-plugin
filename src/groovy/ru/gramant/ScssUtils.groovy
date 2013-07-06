@@ -34,6 +34,7 @@ class ScssUtils {
             params.scss_folder = scssFile.parent
             params.file_path = FilenameUtils.separatorsToUnix(scssFile.canonicalPath)
             params.sourcemap = sourcemap
+            params.compass_root = compassRoot
 
             //call a method defined in the ruby source
             jruby.put("template", scssFile.text);
@@ -67,6 +68,16 @@ class ScssUtils {
                 config.lineComments as boolean,
                 config.sourcemap as boolean
         )
+    }
+
+    private getCompassRoot() {
+        //unable to extract compass sources into separate jar
+        //http://stackoverflow.com/questions/15549617/cleanest-way-to-run-susy-compass-and-sass-within-jruby-complete
+        //http://henningpetersen.com/post/7/integrating-compass-style-sass-into-tapestry
+        def path = new ClassPathResource("ruby/compassCompiler.rb").URL.path
+        def file = new File(path)
+
+        return file.parent
     }
 
     private synchronized getJruby(Boolean compass) {
