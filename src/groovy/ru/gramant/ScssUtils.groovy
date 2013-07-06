@@ -18,7 +18,7 @@ class ScssUtils {
     private ScriptEngine jruby = null
     private Boolean compass = false
 
-    String compile(File scssFile, Collection loadPaths, Boolean compass, String syntax, String style, Boolean debugInfo, Boolean lineComments) {
+    String compile(File scssFile, Collection loadPaths, Boolean compass, String syntax, String style, boolean debugInfo, boolean lineComments, boolean sourcemap) {
         try {
             def jruby = getJruby(compass)
             def fullLoadPaths = [scssFile.parent] + loadPaths
@@ -29,10 +29,11 @@ class ScssUtils {
             def params = [:]
             params.syntax = getSyntax(syntax, scssFile)
             params.style = (style in ['compact', 'compressed', 'nested', 'expanded']) ? style : 'nested'
-            params.debug_info = (debugInfo) ? true : false
-            params.line_comments = (lineComments) ? true : false
+            params.debug_info = debugInfo
+            params.line_comments = lineComments
             params.scss_folder = scssFile.parent
             params.file_path = FilenameUtils.separatorsToUnix(scssFile.canonicalPath)
+            params.sourcemap = sourcemap
 
             //call a method defined in the ruby source
             jruby.put("template", scssFile.text);
@@ -62,8 +63,9 @@ class ScssUtils {
                 compass,
                 config.syntax as String,
                 config.style as String,
-                config.debugInfo as Boolean,
-                config.lineComments as Boolean,
+                config.debugInfo as boolean,
+                config.lineComments as boolean,
+                config.sourcemap as boolean
         )
     }
 
@@ -125,17 +127,29 @@ class ScssUtils {
                 paths.each { path ->
                     def e = FilenameUtils.getExtension(path).toLowerCase()
                     if (path && (e != "css") && !path.startsWith("http://")) {
-                        if (e == "scss" || e == "sass") {
-                            answer << FilenameUtils.getBaseName(path)
-                        } else {
-                            answer << path
-                        }
+//                        if (e == "scss" || e == "sass") {
+//                            answer << FilenameUtils.getBaseName(path)
+//                        } else {
+//                            answer << path
+//                        }
+
+                        answer << getModuleName(path)
                     }
                 }
             }
         })
 
         return answer
+    }
+
+    /**
+     * @return module name extracted from {@code path}
+     * "a/b -> b"
+     * "a/b.scss -> b"
+     * "a -> a"
+     */
+    private static getModuleName(String path) {
+        return FilenameUtils.getBaseName(path)
     }
 
     static removeCommentsFromScss(String scss) {
