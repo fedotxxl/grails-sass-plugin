@@ -20,6 +20,7 @@ class ScssUtils {
 
     String compile(File scssFile, Collection loadPaths, Boolean compass, String syntax, String style, boolean debugInfo, boolean lineComments, boolean sourcemap) {
         try {
+            def jrubyAnswer
             def jruby = getJruby(compass)
             def fullLoadPaths = [scssFile.parent] + loadPaths
 
@@ -41,12 +42,15 @@ class ScssUtils {
             jruby.put("params", params);
             jruby.put("load_paths", fullLoadPaths)
 
-            def answer = (Map) jruby.eval("compileSingleScss(\$template, \$params, \$load_paths)");
-            if (answer.result) {
-                return answer.scss
+
+            synchronized(this) {
+                jrubyAnswer = (Map) jruby.eval("compileSingleScss(\$template, \$params, \$load_paths)");
+            }
+            if (jrubyAnswer.result) {
+                return jrubyAnswer.scss
             } else {
-                log.warn("SCSS: failed to compile scss file [${scssFile}]: ${answer.short_error}")
-                return answer.error
+                log.warn("SCSS: failed to compile scss file [${scssFile}]: ${jrubyAnswer.short_error}")
+                return jrubyAnswer.error
             }
         } catch (RaiseException re) {
             log.error("SCSS: Exception on compiling scss template by path [${scssFile}]")
@@ -95,7 +99,7 @@ class ScssUtils {
         return jruby
     }
 
-    private initJruby(Boolean compass) {
+    private synchronized initJruby(Boolean compass) {
         log.debug("SCSS: instantiating jruby instance. Use compass: ${compass}")
 
         //process a ruby file
@@ -121,6 +125,13 @@ class ScssUtils {
         }
     }
 
+    /**
+     * @return module name extracted from {@code path}
+     * "a/b -> b"   ]
+     * "a/_b -> b"
+     * "a/b.scss -> b"
+     * "a -> a"
+     */
     static String getScssName(String path) {
         def fileName = FilenameUtils.getBaseName(path)
 
@@ -144,23 +155,13 @@ class ScssUtils {
 //                            answer << path
 //                        }
 
-                        answer << getModuleName(path)
+                        answer << getScssName(path)
                     }
                 }
             }
         })
 
         return answer
-    }
-
-    /**
-     * @return module name extracted from {@code path}
-     * "a/b -> b"
-     * "a/b.scss -> b"
-     * "a -> a"
-     */
-    private static getModuleName(String path) {
-        return FilenameUtils.getBaseName(path)
     }
 
     static removeCommentsFromScss(String scss) {
