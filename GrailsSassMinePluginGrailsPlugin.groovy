@@ -5,7 +5,6 @@ import ru.gramant.ScssCompilePathProcessor
 import ru.gramant.ScssCompilerPluginUtils as PluginUtils
 import ru.gramant.ScssConfigHolder
 import ru.gramant.ScssDiskCompiler
-import ru.gramant.ScssResourcesCompiler
 
 import static ru.gramant.ScssCompilerPluginUtils.path
 
@@ -43,7 +42,6 @@ Brief summary/description of the plugin.
     Boolean loaded = false
     Boolean shouldBeCompiled = System.getProperty("scss.compile")
     ScssDiskCompiler diskCompiler
-    ScssResourcesCompiler resourcesCompiler
 
     def doWithConfigOptions = {
         'mode'(type: String, defaultValue: 'disk')
@@ -104,7 +102,7 @@ Brief summary/description of the plugin.
         try {
             if (!loaded) {
                 initConfigHolderAndCompilePathProcessor(application, plugin)
-                resourcesCompiler = new ScssResourcesCompiler(application)
+//                resourcesCompiler = new ScssResourcesCompiler(application)
 
                 if (PluginUtils.isResourcesMode()) {
                     LOG.info "SCSS: compiler in resource mode"

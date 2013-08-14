@@ -20,9 +20,10 @@ grails.project.dependency.resolution = {
 
     dependencies {
         compile "bsf:bsf:2.4.0"
-        compile "io.belov.grails:sass-compass:0.12.2.2.7"
+        compile "io.belov.grails:sass-compass:0.12.2.2.10"
         runtime "org.jruby:jruby-complete:1.6.8"
         compile "commons-io:commons-io:2.4"
+        test "org.spockframework:spock-grails-support:0.7-groovy-2.0"
     }
 
     plugins {
@@ -35,9 +36,10 @@ grails.project.dependency.resolution = {
 
         test(":spock:0.7") {
             export = false
+            exclude "spock-grails-support"
         }
 
-        compile ":resources:1.1.6"
+//        compile ":resources:1.1.6"
         compile ":platform-core:1.0.RC5"
     }
 }
