@@ -5,23 +5,35 @@
 package ru.gramant
 import groovy.util.logging.Slf4j
 import org.apache.commons.io.FilenameUtils
+import org.jruby.embed.LocalContextScope
+import org.jruby.embed.ScriptingContainer
 import org.jruby.exceptions.RaiseException
+import org.jruby.javasupport.JavaEmbedUtils
 import org.springframework.core.io.ClassPathResource
 
 import javax.script.ScriptEngine
-import javax.script.ScriptEngineManager
+import java.util.concurrent.*
 
 @Slf4j
 @Singleton
 class ScssUtils {
 
+    private BlockingQueue<Map> jrubies = new ArrayBlockingQueue(4)
     private ScriptEngine jruby = null
     private Boolean compass = false
 
+    ScssUtils() {
+        4.times {
+            jrubies.put(initJruby(true));
+        }
+    }
+
     String compile(File scssFile, Collection loadPaths, Boolean compass, String syntax, String style, boolean debugInfo, boolean lineComments, boolean sourcemap) {
+        def jruby = null
+
         try {
             def jrubyAnswer
-            def jruby = getJruby(compass)
+            jruby = jrubies.take()
             def fullLoadPaths = [scssFile.parent] + loadPaths
 
             log.trace "SCSS: Compiling scss file [${scssFile}], syntax ${syntax}, style ${style}"
@@ -38,14 +50,14 @@ class ScssUtils {
             params.compass_root = compassRoot
 
             //call a method defined in the ruby source
-            jruby.put("template", scssFile.text);
-            jruby.put("params", params);
-            jruby.put("load_paths", fullLoadPaths)
+            def c = jruby.container
+            def u = jruby.unit
+            c.put("@template", scssFile.text);
+            c.put("@params", params);
+            c.put("@load_paths", fullLoadPaths as CopyOnWriteArrayList)
 
+            jrubyAnswer = (Map) JavaEmbedUtils.rubyToJava(u.run())
 
-            synchronized(this) {
-                jrubyAnswer = (Map) jruby.eval("compileSingleScss(\$template, \$params, \$load_paths)");
-            }
             if (jrubyAnswer.result) {
                 return jrubyAnswer.scss
             } else {
@@ -58,6 +70,8 @@ class ScssUtils {
         } catch (e) {
             log.error("SCSS: Exception on compiling scss template by path [${scssFile}]", e)
             return null
+        } finally {
+            if (jruby) jrubies.put(jruby)
         }
     }
 
@@ -107,10 +121,9 @@ class ScssUtils {
 
         //configure load_path - https://github.com/jruby/jruby/wiki/RedBridge#wiki-Class_Path_Load_Path
         System.setProperty("org.jruby.embed.class.path", "classpath:ruby");
-        def jruby = new ScriptEngineManager().getEngineByName("jruby");
-        jruby.eval(new InputStreamReader(new ClassPathResource("ruby/${rubyFileName}").inputStream));
-
-        return jruby
+        def container = new ScriptingContainer(LocalContextScope.SINGLETHREAD)
+        def unit = container.parse(new InputStreamReader(new ClassPathResource("ruby/${rubyFileName}").inputStream).text)
+        return [container: container, unit: unit]
     }
 
     static String getSyntax(String option, File scssFile) {

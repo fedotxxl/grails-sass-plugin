@@ -43,7 +43,7 @@ class ScssDiskCompiler extends AbstractScssCompiler {
         def filteredFiles = files.findAll { needToProcess(it) }
 
         filteredFiles.each { file ->
-            compileScssFile(file, checkLastModifiedBeforeCompile)
+            compileScssFileAsync(file, checkLastModifiedBeforeCompile)
         }
     }
 
@@ -87,14 +87,14 @@ class ScssDiskCompiler extends AbstractScssCompiler {
             log.debug "SCSS: Checking file [${path(sourceFile)}] and compile dependent on it files"
 
             //compile changed file
-            compileScssFile(sourceFile, checkLastModifiedBeforeCompile)
+            compileScssFileAsync(sourceFile, checkLastModifiedBeforeCompile)
             //compile dependent scss files
             def files = dependentProcessor.getDependentFiles(sourceFile)
             if (files) {
                 log.debug "SCSS: compiling dependent on [${path(sourceFile)}] files ${paths(files)}"
 
                 files.each { file ->
-                    compileScssFile(file, checkLastModifiedBeforeCompile)
+                    compileScssFileAsync(file, checkLastModifiedBeforeCompile)
                 }
             } else {
                 log.debug "SCSS: there is no dependent on [${path(sourceFile)}] files"
@@ -122,6 +122,12 @@ class ScssDiskCompiler extends AbstractScssCompiler {
         } else {
             log.trace("SCSS: file ${path(file)} will not be processed")
             return false //don't compile external files
+        }
+    }
+
+    private compileScssFileAsync(File sourceFile, Boolean checkLastModifiedBeforeCompile = false) {
+        Thread.start {
+            compileScssFile(sourceFile, checkLastModifiedBeforeCompile)
         }
     }
 
