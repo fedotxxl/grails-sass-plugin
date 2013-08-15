@@ -13,12 +13,11 @@ class GrailsSassMinePluginGrailsPlugin {
     private static final Logger LOG = LoggerFactory.getLogger("ru.grails.GrailsSassMinePluginGrailsPlugin")
 
     // the plugin version
-    def version = "0.1.7.31"
+    def version = "0.1.7.32"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
-            "grails-app/conf/SassResources.groovy",
             "grails-app/conf/UrlMappings.groovy",
             "web-app/*"
     ]
@@ -44,14 +43,11 @@ Brief summary/description of the plugin.
     ScssDiskCompiler diskCompiler
 
     def doWithConfigOptions = {
-        'mode'(type: String, defaultValue: 'disk')
         'disk.compileOnAnyCommand'(type: Boolean, defaultValue: true)
         //'disk.folders'(type: Map, defaultValue: ['scss': 'css_scss']) - can't define it because of PC bug http://jira.grails.org/browse/GPPLATFORMCORE-44
         'disk.clearTargetFolder'(type: Boolean, defaultValue: true)
         'disk.checkLastModifiedBeforeCompile'(type: Boolean, defaultValue: false)
         'disk.asyncStartup'(type: Boolean, defaultValue: false)
-        'resources.exceptionOnFailedCompilation'(type: Boolean, defaultValue: false)
-        'resources.modules.folder.source'(type: String, defaultValue: '')
         'syntax'(type: String, defaultValue: 'byFileDimension') //[byFileDimension, sass, scss]
         'style'(type: String, defaultValue: "nested") //[compact, compressed, nested, expanded]
         'lineComments'(type: Boolean, defaultValue: false)
@@ -74,11 +70,7 @@ Brief summary/description of the plugin.
                     ScssCompilePathProcessor.instance.addFolderToCompilePath(file.parentFile)
 
                     //recompile scss file
-                    if (PluginUtils.isResourcesMode()) {
-                        resourcesCompiler.checkFileAndCompileDependents(file)
-                    } else {
-                        diskCompiler.checkFileAndCompileWithDependents(file)
-                    }
+                    diskCompiler.checkFileAndCompileWithDependents(file)
                 }
             }
         } catch (Throwable e) {
@@ -91,61 +83,27 @@ Brief summary/description of the plugin.
         ScssCompilePathProcessor.instance.refreshConfig()
 
         //update compilers
-        if (PluginUtils.isResourcesMode()) {
-            resourcesCompiler?.refreshConfig()
-        } else {
-            diskCompiler?.refreshConfig()
-        }
-    }
-
-    def doWithSpring = {
-        try {
-            if (!loaded) {
-                initConfigHolderAndCompilePathProcessor(application, plugin)
-//                resourcesCompiler = new ScssResourcesCompiler(application)
-
-                if (PluginUtils.isResourcesMode()) {
-                    LOG.info "SCSS: compiler in resource mode"
-
-                    //refreshing dependencies map
-                    resourcesCompiler.calculateDependentFiles(getWatchedFiles(plugin))
-                    //enable resources trigger
-                    resourcesCompiler.setupResourcesCompileSettings()
-
-                    loaded = true
-                }
-            }
-        } catch (Throwable e) {
-            LOG.error("SCSS: exception on plugin startup - " + e, e)
-        }
-    }
-
-    def doWithApplicationContext = {
+        diskCompiler?.refreshConfig()
     }
 
     def doWithWebDescriptor = {
         try {
             if (!loaded) {
                 initConfigHolderAndCompilePathProcessor(application, plugin)
-                diskCompiler = new ScssDiskCompiler(application)
+                diskCompiler = new ScssDiskCompiler()
 
-                if (PluginUtils.isDiskMode()) {
-                    LOG.info "SCSS: compile in disk mode"
-
-                    //resources mode is disabled... may be we should compile scss
-                    if (ScssConfigHolder.config.disk.compileOnAnyCommand || shouldBeCompiled) {
-                        if (ScssConfigHolder.config.disk.asyncStartup) {
-                            Thread.start {
-                                LOG.info "SCSS: async startup compile"
-                                compileWatchedScssFilesToDisk(plugin)
-                            }
-                        } else {
+                if (ScssConfigHolder.config.disk.compileOnAnyCommand || shouldBeCompiled) {
+                    if (ScssConfigHolder.config.disk.asyncStartup) {
+                        Thread.start {
+                            LOG.info "SCSS: async startup compile"
                             compileWatchedScssFilesToDisk(plugin)
                         }
+                    } else {
+                        compileWatchedScssFilesToDisk(plugin)
                     }
-
-                    loaded = true
                 }
+
+                loaded = true
             }
         } catch (Throwable e) {
             LOG.error("SCSS: exception on plugin startup - " + e, e)

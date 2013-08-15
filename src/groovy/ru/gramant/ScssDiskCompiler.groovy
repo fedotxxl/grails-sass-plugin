@@ -3,31 +3,23 @@ import groovy.util.logging.Slf4j
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.filefilter.IOFileFilter
-import org.codehaus.groovy.grails.commons.GrailsApplication
 import org.codehaus.groovy.grails.plugins.GrailsPluginUtils
 
 import static ru.gramant.ScssCompilerPluginUtils.path
 import static ru.gramant.ScssCompilerPluginUtils.paths
 
 @Slf4j
-class ScssDiskCompiler extends AbstractScssCompiler {
+class ScssDiskCompiler {
 
-//    private GrailsApplication application
-//    private ConfigObject config
     private ScssDependentProcessor dependentProcessor
     private Map<String, List<String>> folders
 
-    ScssDiskCompiler(GrailsApplication application) {
-        super(application)
-//        this.application = application
-//        this.config = config
+    ScssDiskCompiler() {
         this.dependentProcessor = new ScssDependentProcessor()
-
         refreshConfig()
     }
 
     void refreshConfig() {
-        super.refreshConfig();
         this.folders = calculateFolders()
     }
 
@@ -117,7 +109,7 @@ class ScssDiskCompiler extends AbstractScssCompiler {
     }
 
     private boolean needToProcess(File file) {
-        if (isProjectOrInlinePluginFile(file)) {
+        if (ScssPluginUtils.isProjectOrInlinePluginFile(file)) {
             return getTargetFoldersForFile(file) as boolean
         } else {
             log.trace("SCSS: file ${path(file)} will not be processed")
@@ -183,23 +175,6 @@ class ScssDiskCompiler extends AbstractScssCompiler {
     private getSourceFolderKeyForFile(File file) {
         return folders.keySet().find { ScssCompilerPluginUtils.pathContains(file.canonicalPath, it) }
     }
-
-//    private calculateModulesScssPaths() {
-//        def answer = []
-//        def modules = config.disk.modules
-//
-//        if (modules) {
-//            modules.each { module ->
-//                def moduleFolder = pluginBuildSettings.getPluginDirForName(module)?.file
-//                if (moduleFolder) {
-//                    def file = new File(moduleFolder, sourceFolder)
-//                    if (file.exists()) answer << file.canonicalPath
-//                }
-//            }
-//        }
-//
-//        return answer
-//    }
 
     private Map calculateFolders() {
         def answer = [:].withDefault { [] }

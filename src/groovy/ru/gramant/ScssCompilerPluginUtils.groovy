@@ -12,14 +12,6 @@ class ScssCompilerPluginUtils {
 
     private static List relativeProjectPaths = []
 
-    static Boolean isResourcesMode() {
-        return ScssConfigHolder.config.mode == 'resources'
-    }
-
-    static Boolean isDiskMode() {
-        return !isResourcesMode()
-    }
-
     static boolean pathContains(String path, String pathToCheck) {
         return path.contains(pathToCheck) //todo change
     }
