@@ -9,7 +9,7 @@ import org.codehaus.groovy.grails.plugins.GrailsPluginUtils
 
 class ScssPluginUtils {
 
-    private static final PROJECT_FOLDER = new File('.')
+    static final PROJECT_FOLDER = new File('.')
 
     static boolean isProjectOrInlinePluginFile(File file) {
         def isProjectFile = FileUtils.directoryContains(PROJECT_FOLDER, file)

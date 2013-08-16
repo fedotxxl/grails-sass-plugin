@@ -3,29 +3,45 @@
  * Copyright (c) 2012 Cybervision. All rights reserved.
  */
 package ru.gramant.compilers
-
 import groovy.util.logging.Slf4j
 import org.apache.commons.io.FilenameUtils
 import org.jruby.exceptions.RaiseException
-import org.jruby.javasupport.JavaEmbedUtils
 import org.springframework.core.io.ClassPathResource
-
-import java.util.concurrent.CopyOnWriteArrayList
 
 @Slf4j
 @Singleton
 class ScssSmartCompiler {
 
     private ScssCompiler compiler
+    private Boolean compass = null
+    private Integer threadsCount = null
 
-    void reset(Boolean compass, Integer threadsCount) {
+    synchronized void reset(Boolean compass, Integer threadsCount) {
+        if (this.compass == null || this.compass != compass || this.threadsCount == null || this.threadsCount != threadsCount) {
+            def compiler
 
+            if (threadsCount == 1) {
+                log.info("SCSS: Loading single thread compiler")
+
+                compiler = ScssSingleThreadCompiler.instance
+                compiler.setCompass(compass)
+            } else {
+                log.info("SCSS: Loading multiple threads (${threadsCount}) compiler")
+
+                compiler = ScssMultiThreadCompiler.instance
+                compiler.setCompass(compass)
+                compiler.setThreadsCount(threadsCount)
+            }
+
+            this.compiler = compiler
+            this.compass = compass
+            this.threadsCount = threadsCount
+        }
     }
 
     String compile(File scssFile, Collection loadPaths, String syntax, String style, boolean debugInfo, boolean lineComments, boolean sourcemap) {
         try {
             def jrubyAnswer
-            jruby = jrubies.take()
             def fullLoadPaths = [scssFile.parent] + loadPaths
 
             log.trace "SCSS: Compiling scss file [${scssFile}], syntax ${syntax}, style ${style}"
@@ -41,14 +57,7 @@ class ScssSmartCompiler {
             params.sourcemap = sourcemap
             params.compass_root = compassRoot
 
-            //call a method defined in the ruby source
-            def c = jruby.container
-            def u = jruby.unit
-            c.put("@template", scssFile.text);
-            c.put("@params", params);
-            c.put("@load_paths", fullLoadPaths as CopyOnWriteArrayList)
-
-            jrubyAnswer = (Map) JavaEmbedUtils.rubyToJava(u.run())
+            jrubyAnswer = compiler.compile(scssFile, params, fullLoadPaths)
 
             if (jrubyAnswer.result) {
                 return jrubyAnswer.scss
@@ -62,16 +71,13 @@ class ScssSmartCompiler {
         } catch (e) {
             log.error("SCSS: Exception on compiling scss template by path [${scssFile}]", e)
             return null
-        } finally {
-            if (jruby) jrubies.put(jruby)
         }
     }
 
-    String compile(File scssFile, Collection paths, Boolean compass = false, Map config = [:]) {
+    String compile(File scssFile, Collection paths, Map config = [:]) {
         return compile(
                 scssFile,
                 paths,
-                compass,
                 config.syntax as String,
                 config.style as String,
                 config.debugInfo as boolean,

@@ -40,7 +40,7 @@ class ScssSingleThreadCompiler implements ScssCompiler {
         log.debug("SCSS: instantiating jruby instance. Use compass: ${compass}")
 
         //process a ruby file
-        def rubyFileName = compass ? "compassCompiler.rb" : "scssCompiler.rb"
+        def rubyFileName = compass ? "compassCompiler_2.rb" : "scssCompiler.rb"
 
         //configure load_path - https://github.com/jruby/jruby/wiki/RedBridge#wiki-Class_Path_Load_Path
         System.setProperty("org.jruby.embed.class.path", "classpath:ruby");

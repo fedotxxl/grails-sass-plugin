@@ -15,7 +15,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 @Slf4j
 @Singleton
-class ScssMultiThreadCompiler {
+class ScssMultiThreadCompiler implements ScssCompiler {
 
     private BlockingQueue<Map> jrubies
     private Boolean compass = null

@@ -5,6 +5,7 @@ import ru.gramant.ScssCompilePathProcessor
 import ru.gramant.ScssCompilerPluginUtils as PluginUtils
 import ru.gramant.ScssConfigHolder
 import ru.gramant.ScssDiskCompiler
+import ru.gramant.compilers.ScssSmartCompiler
 
 import static ru.gramant.ScssCompilerPluginUtils.path
 
@@ -13,7 +14,7 @@ class GrailsSassMinePluginGrailsPlugin {
     private static final Logger LOG = LoggerFactory.getLogger("ru.grails.GrailsSassMinePluginGrailsPlugin")
 
     // the plugin version
-    def version = "0.1.7.32"
+    def version = "0.1.7.38"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // resources that are excluded from plugin packaging
@@ -53,6 +54,7 @@ Brief summary/description of the plugin.
         'lineComments'(type: Boolean, defaultValue: false)
         'debugInfo'(type: Boolean, defaultValue: false)
         'compass'(type: Boolean, defaultValue: false)
+        'threadsCount'(type: Integer, defaultValue: 1)
         'relativePaths'(type: Boolean, defaultValue: true)
         'compilePathExclude'(type: List, defaultValue: [])
     }
@@ -84,12 +86,13 @@ Brief summary/description of the plugin.
 
         //update compilers
         diskCompiler?.refreshConfig()
+        ScssSmartCompiler.instance.reset(ScssConfigHolder.config.compass, ScssConfigHolder.config.threadsCount)
     }
 
     def doWithWebDescriptor = {
         try {
             if (!loaded) {
-                initConfigHolderAndCompilePathProcessor(application, plugin)
+                initConfigHolderCompilePathProcessorAndCompiler(application, plugin)
                 diskCompiler = new ScssDiskCompiler()
 
                 if (ScssConfigHolder.config.disk.compileOnAnyCommand || shouldBeCompiled) {
@@ -128,9 +131,10 @@ Brief summary/description of the plugin.
         return plugin.watchedResources.collect { it.file }
     }
 
-    private initConfigHolderAndCompilePathProcessor(application, plugin) {
+    private initConfigHolderCompilePathProcessorAndCompiler(application, plugin) {
         ScssConfigHolder.readPluginsConfig(application.config)
         ScssCompilePathProcessor.instance.init(getWatchedFiles(plugin).collect { it.parentFile })
+        ScssSmartCompiler.instance.reset(ScssConfigHolder.config.compass, ScssConfigHolder.config.threadsCount)
     }
 
 }

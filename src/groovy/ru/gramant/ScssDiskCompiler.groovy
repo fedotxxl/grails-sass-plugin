@@ -1,9 +1,11 @@
 package ru.gramant
+
 import groovy.util.logging.Slf4j
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.filefilter.IOFileFilter
 import org.codehaus.groovy.grails.plugins.GrailsPluginUtils
+import ru.gramant.compilers.ScssSmartCompiler
 
 import static ru.gramant.ScssCompilerPluginUtils.path
 import static ru.gramant.ScssCompilerPluginUtils.paths
@@ -41,7 +43,7 @@ class ScssDiskCompiler {
 
     void clearTargetFolder() {
         def targetFolders = folders.values().flatten() as Set
-        def parentFolders = GrailsPluginUtils.pluginBuildSettings.getInlinePluginDirectories().collect {it.file} + projectFolder
+        def parentFolders = GrailsPluginUtils.pluginBuildSettings.getInlinePluginDirectories().collect {it.file} + ScssPluginUtils.PROJECT_FOLDER
 
         targetFolders.each { folder ->
             parentFolders.each { parentFolder ->
@@ -134,7 +136,11 @@ class ScssDiskCompiler {
             if (!checkLastModifiedBeforeCompile || isModifiedSinceLastCompile(sourceFile, targetFiles)) {
                 log.debug "SCSS: compiling file ${path(sourceFile)} to ${paths(targetFiles)}"
 
-                def css = ScssUtils.instance.compile(sourceFile, ScssCompilePathProcessor.instance.compilePath, ScssConfigHolder.config.compass, ScssConfigHolder.config)
+                def css
+
+                def start = System.currentTimeMillis()
+                    css = ScssSmartCompiler.instance.compile(sourceFile, ScssCompilePathProcessor.instance.compilePath, ScssConfigHolder.config)
+                log.debug("total: ${System.currentTimeMillis() - start}")
 
                 targetFiles.each { targetFile ->
                     targetFile.parentFile.mkdirs()

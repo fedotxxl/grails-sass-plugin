@@ -5,55 +5,9 @@
 package ru.gramant
 import groovy.util.logging.Slf4j
 import org.apache.commons.io.FilenameUtils
-import org.jruby.embed.LocalContextScope
-import org.jruby.embed.ScriptingContainer
-import org.springframework.core.io.ClassPathResource
-
-import javax.script.ScriptEngine
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.BlockingQueue
 
 @Slf4j
-@Singleton
 class ScssUtils {
-
-    private BlockingQueue<Map> jrubies = new ArrayBlockingQueue(4)
-    private ScriptEngine jruby = null
-    private Boolean compass = false
-
-    ScssUtils() {
-        4.times {
-            jrubies.put(initJruby(true));
-        }
-    }
-
-    private synchronized getJruby(Boolean compass) {
-        if (this.compass != compass) {
-            //compass param changed reset jruby
-            //current implementation will be very bad when compass param changes frequently
-            this.jruby = null
-            this.compass = compass
-        }
-
-        if (jruby == null) {
-            jruby = initJruby(compass)
-        }
-
-        return jruby
-    }
-
-    private synchronized initJruby(Boolean compass) {
-        log.debug("SCSS: instantiating jruby instance. Use compass: ${compass}")
-
-        //process a ruby file
-        def rubyFileName = compass ? "compassCompiler.rb" : "scssCompiler.rb"
-
-        //configure load_path - https://github.com/jruby/jruby/wiki/RedBridge#wiki-Class_Path_Load_Path
-        System.setProperty("org.jruby.embed.class.path", "classpath:ruby");
-        def container = new ScriptingContainer(LocalContextScope.SINGLETHREAD)
-        def unit = container.parse(new InputStreamReader(new ClassPathResource("ruby/${rubyFileName}").inputStream).text)
-        return [container: container, unit: unit]
-    }
 
     /**
      * @return module name extracted from {@code path}
