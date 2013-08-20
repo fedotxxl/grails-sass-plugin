@@ -38,7 +38,7 @@ class ScssSmartCompiler {
         }
     }
 
-    String compile(File scssFile, Collection loadPaths, String syntax, String style, boolean debugInfo, boolean lineComments, boolean sourcemap) {
+    String compile(File scssFile, Collection loadPaths, String syntax, String style, boolean cache, boolean debugInfo, boolean lineComments, boolean sourcemap) {
         try {
             def jrubyAnswer
             def fullLoadPaths = [scssFile.parent] + loadPaths
@@ -54,6 +54,7 @@ class ScssSmartCompiler {
             params.scss_folder = scssFile.parent
             params.file_path = FilenameUtils.separatorsToUnix(scssFile.canonicalPath)
             params.sourcemap = sourcemap
+            params.cache = cache
             params.compass_root = compassRoot
 
             jrubyAnswer = compiler.compile(scssFile, params, fullLoadPaths)
@@ -79,6 +80,7 @@ class ScssSmartCompiler {
                 paths,
                 config.syntax as String,
                 config.style as String,
+                config.cache as boolean,
                 config.debugInfo as boolean,
                 config.lineComments as boolean,
                 config.sourcemap as boolean

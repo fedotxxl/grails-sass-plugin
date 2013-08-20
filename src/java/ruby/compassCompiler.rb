@@ -19,7 +19,7 @@ def compileSingleScss(template, params, load_paths)
   #load_paths.add(File.join(Compass.base_directory, 'frameworks/blueprint/stylesheets'))
   load_paths.add(File.join(params['compass_root'], 'frameworks/compass/stylesheets'))
 
-  convertedParams[:cache] = true
+  convertedParams[:cache] = params['cache']
   convertedParams[:load_paths] = load_paths
   convertedParams[:debug_info] = params['debug_info']
   convertedParams[:line_comments] = params['line_comments']
@@ -29,8 +29,13 @@ def compileSingleScss(template, params, load_paths)
 
   answer = Hash.new
 
+  puts "2"
+
   begin
     sass = Sass::Engine.new(template, convertedParams)
+
+    puts "3"
+
     answer['scss'] = sass.render
     answer['result'] = true
   rescue Sass::SyntaxError => e
@@ -38,9 +43,9 @@ def compileSingleScss(template, params, load_paths)
     answer['error'] = Sass::SyntaxError.exception_to_css(e, :full_exception => true)
     answer['short_error'] = e.sass_backtrace_str
     answer['result'] = false
-
-    puts "4"
   end
+
+  puts "4"
 
   return answer
 end

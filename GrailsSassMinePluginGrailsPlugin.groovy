@@ -14,7 +14,7 @@ class GrailsSassMinePluginGrailsPlugin {
     private static final Logger LOG = LoggerFactory.getLogger("ru.grails.GrailsSassMinePluginGrailsPlugin")
 
     // the plugin version
-    def version = "0.1.7.40"
+    def version = "0.1.7.41"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // resources that are excluded from plugin packaging
@@ -54,6 +54,7 @@ Brief summary/description of the plugin.
         'lineComments'(type: Boolean, defaultValue: false)
         'debugInfo'(type: Boolean, defaultValue: false)
         'compass'(type: Boolean, defaultValue: false)
+        'cache'(type: Boolean, defaultValue: true)
         'threadsCount'(type: Integer, defaultValue: 1)
         'relativePaths'(type: Boolean, defaultValue: true)
         'compilePathExclude'(type: List, defaultValue: [])
