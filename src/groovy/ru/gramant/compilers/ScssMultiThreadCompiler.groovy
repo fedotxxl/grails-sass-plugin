@@ -21,18 +21,18 @@ class ScssMultiThreadCompiler implements ScssCompiler {
     private Boolean compass = null
     private Integer threadsCount = -1
 
-    void setThreadsCount(Integer count) {
+    synchronized void setThreadsCount(Integer count) {
         threadsCount = count
         jrubies = new ArrayBlockingQueue<>(count)
         resetQueue()
     }
 
-    void setCompass(Boolean compass) {
+    synchronized void setCompass(Boolean compass) {
         this.compass = compass
         resetQueue()
     }
 
-    private resetQueue() {
+    private synchronized resetQueue() {
         threadsCount.times {
             jrubies.put(initJruby(compass));
         }
