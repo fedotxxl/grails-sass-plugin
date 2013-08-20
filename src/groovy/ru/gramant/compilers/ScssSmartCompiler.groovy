@@ -29,8 +29,7 @@ class ScssSmartCompiler {
                 log.info("SCSS: Loading multiple threads (${threadsCount}) compiler")
 
                 compiler = ScssMultiThreadCompiler.instance
-                compiler.setCompass(compass)
-                compiler.setThreadsCount(threadsCount)
+                compiler.setCompassAndThreadsCount(compass, threadsCount)
             }
 
             this.compiler = compiler

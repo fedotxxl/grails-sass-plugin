@@ -7,8 +7,6 @@ package ru.gramant.compilers
 
 public interface ScssCompiler {
 
-    void setCompass(Boolean compass)
-
     Map compile(File scssFile, Map params, Collection fullLoadPaths)
 
 }
