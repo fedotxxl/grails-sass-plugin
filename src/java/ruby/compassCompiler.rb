@@ -13,6 +13,14 @@ def compileSingleScss(template, params, load_paths)
       'custom' # A name for the configuration, can be anything you want
   )
 
+  Compass.add_configuration(
+        {
+            :images_dir" => 'web-app/img'
+        },
+        'optional'
+    )
+
+
   convertedParams = Hash.new
 
   #load_paths.add(File.join(Compass.base_directory, 'frameworks/compass/stylesheets'))

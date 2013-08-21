@@ -33,4 +33,13 @@ class ScssUtilsSpec extends spock.lang.Specification  {
         "c:/hello world/abc efd.txt" | "abc efd"
         "c:\\hello world\\abc efd.txt" | "abc efd"
     }
+
+    def "test comments cleaner"() {
+        expect:
+        assert ScssUtils.removeCommentsFromScss(new ClassPathResource(source).file.text) == new ClassPathResource(target).file.text
+
+        where:
+        source | target
+        "/ru/gramant/1.withComments.scss" | "/ru/gramant/1.withoutComments.scss"
+    }
 }

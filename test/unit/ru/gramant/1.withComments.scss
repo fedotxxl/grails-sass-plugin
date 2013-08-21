@@ -1,0 +1,126 @@
+@import "pc/title-block/*.png";
+
+.title-block {
+  position: relative;
+  //width: 100%;
+
+  $title-block-height: 73px;
+  $sub-title-height: 20px;
+
+  &.right {
+    text-align: right;
+
+    .title-block-label {
+      $left-width: 33px;
+      $right-width: 20px;
+
+      margin-left: $margin*2;
+
+      .left-side {
+        @include background-sprite-with-shift($title-block-sprites, right, -6px, 0);
+        width: $left-width;
+      }
+
+      .right-side {
+        @include background-sprite-with-shift($title-block-sprites, right, 20px, 0);
+        float: right;
+        width: $right-width;
+      }
+
+      .center-side {
+        margin: 0 $right-width 0 $left-width;
+      }
+    }
+  }
+
+  &.left {
+    text-align: left;
+
+    .title-block-label {
+      $left-width: 20px;
+      $right-width: 33px;
+
+      margin-right: $margin*2;
+
+      .left-side {
+        @include background-sprite($title-block-sprites, left);
+        width: $left-width;
+      }
+
+      .right-side {
+        @include background-sprite-with-shift($title-block-sprites, left, 39px, 0);
+        width: $right-width;
+      }
+
+      .center-side {
+        margin: 0 $right-width 0 $left-width;
+      }
+    }
+  }
+
+  .title-block-label {
+    display: inline-block;
+    height: $title-block-height;
+    //margin-right: -4px;
+
+    .title-container {
+      @include height-and-line-height($title-block-height - $sub-title-height);
+      display: block;
+      overflow: hidden;
+
+      .title {
+        display: inline-block;
+        line-height: 1.2em;
+        max-height: 2em;
+        vertical-align: middle;
+        //color: #fff;
+        font-size: $font-tb-title;
+        font-weight: bold;
+      }
+    }
+
+    &.title-only {
+      .title-container {
+        @include height-and-line-height($title-block-height);
+        text-align: center;
+      }
+
+      .sub-title {
+        display: none;
+      }
+    }
+
+    .sub-title {
+      display: block;
+      height: $sub-title-height;
+
+      color: $color-grey-light;
+      font-size: $font-tb-sub-title;
+    }
+
+    .left-side {
+      float: left;
+      height: 100%;
+    }
+
+    .right-side {
+      float: right;
+      height: 100%;
+    }
+
+    .center-side {
+      @include background-sprite($title-block-sprites, center);
+      background-repeat: repeat-x;
+      height: 100%;
+      min-width: 100px;
+    }
+  }
+
+  .title-block-body {
+    @include bordered-main-content;
+
+    min-height: 100px;
+    margin-top: -14px;
+    text-align: left;
+  }
+}
